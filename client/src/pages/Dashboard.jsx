@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
 import Navbar from "../components/Navbar";
 import Profile from "../components/Profile";
 
 // src/pages/Dashboard.jsx
 export default function Dashboard() {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white">
       <Navbar />
@@ -30,7 +33,10 @@ export default function Dashboard() {
           <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-purple-500 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-purple-500/10">
             <h2 className="text-xl font-bold mb-2 text-purple-400">My Portfolio</h2>
             <p className="text-gray-300 mb-4">Manage and showcase your creative work</p>
-            <button className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors duration-300">
+            <button
+              onClick={() => navigate("/portfolio")}
+              className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors duration-300"
+            >
               View Portfolio
             </button>
           </div>
