@@ -9,6 +9,14 @@ const Profile = () => {
   const [experiences, setExperiences] = useState([{ title: "", company: "", duration: "", description: "" }]);
   const [skills, setSkills] = useState([]);
   const [bio, setBio] = useState("");
+  const [profilePhoto, setProfilePhoto] = useState("");
+  const [coverPhoto, setCoverPhoto] = useState("");
+  const [socialMedia, setSocialMedia] = useState({
+    facebook: "",
+    twitter: "",
+    instagram: "",
+    linkedin: "",
+  });
 
   // Role-specific specializations
   const photographerSpecializations = [
@@ -48,7 +56,7 @@ const Profile = () => {
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
         });
-        
+
         if (response.ok) {
           const userData = await response.json();
           setUserRole(userData.role);
@@ -57,6 +65,14 @@ const Profile = () => {
           setExperiences(userData.experiences || []);
           setSkills(userData.skills || []);
           setBio(userData.bio || "");
+          setProfilePhoto(userData.profilePhoto || "");
+          setCoverPhoto(userData.coverPhoto || "");
+          setSocialMedia(userData.socialMedia || {
+            facebook: "",
+            twitter: "",
+            instagram: "",
+            linkedin: "",
+          });
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -83,6 +99,13 @@ const Profile = () => {
     setExperiences(newExperiences);
   };
 
+  const handleSocialMediaChange = (platform, value) => {
+    setSocialMedia(prev => ({
+      ...prev,
+      [platform]: value
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const response = await fetch(`${API_BASE}/api/auth/updateProfile`, {
@@ -91,7 +114,7 @@ const Profile = () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
       },
-      body: JSON.stringify({ specialization, specializationDetails, experiences, skills, bio }),
+      body: JSON.stringify({ specialization, specializationDetails, experiences, skills, bio, profilePhoto, coverPhoto, socialMedia }),
     });
 
     if (response.ok) {
@@ -105,8 +128,8 @@ const Profile = () => {
     return <div className="text-gray-300">Loading...</div>;
   }
 
-  const currentSpecializations = userRole === "photographer" 
-    ? photographerSpecializations 
+  const currentSpecializations = userRole === "photographer"
+    ? photographerSpecializations
     : musicianSpecializations;
 
   return (
@@ -119,7 +142,7 @@ const Profile = () => {
             {userRole}
           </div>
         </div>
-        
+
         <div className="mb-4">
           <label className="block text-gray-300 mb-2">Specialization</label>
           <select
@@ -136,7 +159,7 @@ const Profile = () => {
             ))}
           </select>
         </div>
-        
+
         <div className="mb-4">
           <label className="block text-gray-300 mb-2">Specialization Details</label>
           <input
@@ -187,18 +210,18 @@ const Profile = () => {
                 className="w-full p-2 bg-gray-600 text-white rounded mb-2"
                 rows="3"
               />
-              <button 
-                type="button" 
-                onClick={() => removeExperience(index)} 
+              <button
+                type="button"
+                onClick={() => removeExperience(index)}
                 className="text-red-500 hover:text-red-400 text-sm"
               >
                 Remove Experience
               </button>
             </div>
           ))}
-          <button 
-            type="button" 
-            onClick={addExperience} 
+          <button
+            type="button"
+            onClick={addExperience}
             className="text-blue-500 hover:text-blue-400 text-sm"
           >
             + Add Experience
@@ -226,7 +249,63 @@ const Profile = () => {
             rows="4"
           />
         </div>
-        
+
+        <div className="mb-4">
+          <label className="block text-gray-300 mb-2">Profile Photo URL</label>
+          <input
+            type="text"
+            value={profilePhoto}
+            onChange={(e) => setProfilePhoto(e.target.value)}
+            className="w-full p-2 bg-gray-700 text-white rounded"
+            placeholder="URL to your profile photo"
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-gray-300 mb-2">Cover Photo URL</label>
+          <input
+            type="text"
+            value={coverPhoto}
+            onChange={(e) => setCoverPhoto(e.target.value)}
+            className="w-full p-2 bg-gray-700 text-white rounded"
+            placeholder="URL to your cover photo"
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-gray-300 mb-2">Social Media Links</label>
+          <div className="space-y-2">
+            <input
+              type="text"
+              value={socialMedia.facebook}
+              onChange={(e) => handleSocialMediaChange('facebook', e.target.value)}
+              className="w-full p-2 bg-gray-700 text-white rounded"
+              placeholder="Facebook profile URL"
+            />
+            <input
+              type="text"
+              value={socialMedia.twitter}
+              onChange={(e) => handleSocialMediaChange('twitter', e.target.value)}
+              className="w-full p-2 bg-gray-700 text-white rounded"
+              placeholder="Twitter profile URL"
+            />
+            <input
+              type="text"
+              value={socialMedia.instagram}
+              onChange={(e) => handleSocialMediaChange('instagram', e.target.value)}
+              className="w-full p-2 bg-gray-700 text-white rounded"
+              placeholder="Instagram profile URL"
+            />
+            <input
+              type="text"
+              value={socialMedia.linkedin}
+              onChange={(e) => handleSocialMediaChange('linkedin', e.target.value)}
+              className="w-full p-2 bg-gray-700 text-white rounded"
+              placeholder="LinkedIn profile URL"
+            />
+          </div>
+        </div>
+
         <button
           type="submit"
           className="w-full py-2 bg-purple-600 hover:bg-purple-700 rounded transition-colors"

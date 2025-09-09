@@ -67,6 +67,21 @@ export const getPublicPortfolios = async (req, res) => {
   }
 };
 
+export const getLatestPortfolios = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 3;
+    const portfolios = await Portfolio.find({})
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .populate("user", "name username");
+
+    res.json(portfolios);
+  } catch (error) {
+    console.error("Error fetching latest portfolios:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 export const updatePortfolio = async (req, res) => {
   try {
     const { id } = req.params;

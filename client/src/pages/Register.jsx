@@ -1,7 +1,12 @@
 // src/pages/Register.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../components/AuthLayout";
+
+const specializationOptions = {
+  photographer: ["Portrait", "Landscape", "Wedding", "Fashion", "Wildlife", "Sports"],
+  musician: ["Vocalist", "Guitarist", "Pianist", "Drummer", "Composer", "DJ"]
+};
 
 export default function Register() {
   const [name, setName] = useState("");
@@ -13,6 +18,12 @@ export default function Register() {
   const [specializationDetails, setSpecializationDetails] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (specialization && !specializationOptions[role]?.includes(specialization)) {
+      setSpecialization("");
+    }
+  }, [role]);
   
 
 
@@ -114,14 +125,21 @@ export default function Register() {
           </div>
         )}
 
-        <input
-          type="text"
-          placeholder="Specialization"
+        <select
           className="px-4 py-3 rounded-lg bg-white/10 text-white border border-gray-700"
           value={specialization}
           onChange={(e) => setSpecialization(e.target.value)}
           required
-        />
+        >
+          <option value="" disabled>
+            Select Specialization
+          </option>
+          {specializationOptions[role]?.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
 
         <input
           type="text"

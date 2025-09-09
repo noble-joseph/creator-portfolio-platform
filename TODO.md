@@ -1,27 +1,32 @@
-# Portfolio Module Implementation TODO
+# Dashboard Enhancement Tasks
 
-## Backend Tasks
-- [x] Define Portfolio model with fields: title, description, link, category, tags, privacy (public/private), user reference
-- [x] Add portfolio controller functions: createPortfolio, getUserPortfolios, updatePortfolio, deletePortfolio
-- [x] Add portfolio routes: POST /portfolio, GET /portfolio, PUT /portfolio/:id, DELETE /portfolio/:id
-- [ ] Update server routes to include portfolio endpoints
+## Phase 1: Header Updates
+- [ ] Add social media icons to Navbar component below existing header content
+- [ ] Install react-icons package if not already available for social media icons
 
-## Frontend Tasks
-- [x] Create Portfolio.jsx page with form to add/edit portfolio items
-- [ ] Add privacy toggle (public/private) for each portfolio item
-- [ ] Display user's portfolio items with edit/delete options
-- [x] Update Dashboard.jsx to navigate to /portfolio page
-- [x] Update App.jsx to include /portfolio route
-- [x] Add portfolio viewing on public profiles (only public posts)
+## Phase 2: Cover Photo and Profile Photo
+- [ ] Add cover photo section below header in Dashboard page
+- [ ] Display specialization text or image on cover photo
+- [ ] Add circular profile photo overlapping cover photo and below it, centered horizontally
+- [ ] Fetch and display user profile photo (use placeholder if not available)
 
-## Testing & Validation
-- [ ] Test portfolio CRUD operations
-- [ ] Add form validation for portfolio fields
-- [ ] Implement error handling for API calls
-- [ ] Test privacy settings (public posts visible to all, private only to owner)
+## Phase 3: Profile Information Display
+- [ ] Create ProfileInfo component to display profile information (experiences, skills, bio) in a suitable layout
+- [ ] Integrate ProfileInfo component below profile photo in Dashboard
 
-## Additional Features
-- [ ] Add categories/tags for better organization
-- [ ] Add image/thumbnail support for portfolio items
-- [ ] Add search/filter functionality
-- [ ] Add portfolio analytics/stats
+## Phase 4: Portfolio Section
+- [ ] Create PortfolioPreview component to show 3 latest works
+- [ ] Add "View More" button to navigate to full portfolio page
+- [ ] Fetch portfolio data from API and display in preview format
+
+## Phase 5: Modules and Layout
+- [ ] Update Connections module layout and functionality
+- [ ] Update Analytics module layout and functionality
+- [ ] Ensure responsive design for all new components
+- [ ] Move logout button to bottom of the page
+
+## Phase 6: Testing and Refinement
+- [ ] Test all new components and layout on different screen sizes
+- [ ] Ensure proper data fetching and error handling
+- [ ] Verify navigation and button functionalities
+- [ ] Final styling adjustments for consistency

@@ -7,6 +7,7 @@ import {
   createPortfolio,
   getUserPortfolios,
   getPublicPortfolios,
+  getLatestPortfolios,
   updatePortfolio,
   deletePortfolio,
 } from "../controllers/creatorController.js";
@@ -22,6 +23,7 @@ router.get("/dashboard", protect, (req, res) => {
 // Portfolio routes
 router.post("/portfolio", protect, createPortfolio);
 router.get("/portfolio", protect, getUserPortfolios);
+router.get("/portfolio/latest", getLatestPortfolios); // Get latest portfolio items
 router.get("/portfolio/public/:userId", getPublicPortfolios); // Public access
 router.put("/portfolio/:id", protect, updatePortfolio);
 router.delete("/portfolio/:id", protect, deletePortfolio);

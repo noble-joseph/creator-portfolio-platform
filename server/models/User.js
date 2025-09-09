@@ -84,6 +84,20 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    profilePhoto: {
+      type: String,
+      default: "",
+    },
+    coverPhoto: {
+      type: String,
+      default: "",
+    },
+    socialMedia: {
+      facebook: { type: String, default: "" },
+      twitter: { type: String, default: "" },
+      instagram: { type: String, default: "" },
+      linkedin: { type: String, default: "" },
+    },
   },
   { timestamps: true }
 );

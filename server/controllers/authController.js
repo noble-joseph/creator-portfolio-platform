@@ -112,12 +112,12 @@ export const refreshAccessToken = async (req, res) => {
 // @access  Private
 export const updateProfile = async (req, res) => {
   try {
-    const { specialization, specializationDetails, experiences, skills, bio } = req.body;
+    const { specialization, specializationDetails, experiences, skills, bio, profilePhoto, coverPhoto, socialMedia } = req.body;
     const userId = req.user.id;
 
     const user = await User.findByIdAndUpdate(
       userId,
-      { specialization, specializationDetails, experiences, skills, bio },
+      { specialization, specializationDetails, experiences, skills, bio, profilePhoto, coverPhoto, socialMedia },
       { new: true, runValidators: true }
     );
 
@@ -134,6 +134,9 @@ export const updateProfile = async (req, res) => {
           experiences: user.experiences,
           skills: user.skills,
           bio: user.bio,
+          profilePhoto: user.profilePhoto,
+          coverPhoto: user.coverPhoto,
+          socialMedia: user.socialMedia,
         },
       });
     } else {
@@ -164,6 +167,9 @@ export const getCurrentUser = async (req, res) => {
         experiences: user.experiences,
         skills: user.skills,
         bio: user.bio,
+        profilePhoto: user.profilePhoto,
+        coverPhoto: user.coverPhoto,
+        socialMedia: user.socialMedia,
       });
     } else {
       res.status(404).json({ message: "User not found" });
