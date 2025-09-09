@@ -151,7 +151,7 @@ export const updateProfile = async (req, res) => {
 export const getCurrentUser = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
-    
+
     if (user) {
       res.json({
         _id: user._id,
@@ -170,6 +170,35 @@ export const getCurrentUser = async (req, res) => {
     }
   } catch (error) {
     console.error("❌ Get current user error:", error.stack);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// @desc    Get user profile by ID
+// @route   GET /api/auth/profile/:userId
+// @access  Public
+export const getUserProfile = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId);
+
+    if (user) {
+      res.json({
+        _id: user._id,
+        name: user.name,
+        username: user.username,
+        role: user.role,
+        specialization: user.specialization,
+        specializationDetails: user.specializationDetails,
+        experiences: user.experiences,
+        skills: user.skills,
+        bio: user.bio,
+      });
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
+  } catch (error) {
+    console.error("❌ Get user profile error:", error.stack);
     res.status(500).json({ message: "Server error" });
   }
 };
