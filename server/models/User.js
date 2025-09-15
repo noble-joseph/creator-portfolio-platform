@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
-const allowedRoles = ["musician", "photographer"];
+const allowedRoles = ["musician", "photographer", "admin"];
 
 const userSchema = new mongoose.Schema(
   {
@@ -33,14 +33,25 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      required: [true, "Password is required"],
+      required: function() {
+        return !this.googleId; // Password required only if not OAuth user
+      },
       validate: {
         validator: function (value) {
-          return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(value);
+          if (!this.googleId && value) {
+            return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(value);
+          }
+          return true;
         },
         message:
           "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.",
       },
+    },
+
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
     },
 
     role: {
@@ -49,11 +60,21 @@ const userSchema = new mongoose.Schema(
         values: allowedRoles,
         message: "Role must be either musician or photographer",
       },
-      required: [true, "Role is required"],
+      required: function() {
+        return !this.googleId; // Role required only if not OAuth user
+      },
+      default: function() {
+        return this.googleId ? "musician" : undefined; // Default role for OAuth users
+      },
     },
     specialization: {
       type: String,
-      required: [true, "Specialization is required"],
+      required: function() {
+        return !this.googleId; // Specialization required only if not OAuth user
+      },
+      default: function() {
+        return this.googleId ? "General" : undefined; // Default specialization for OAuth users
+      },
     },
     specializationDetails: {
       type: String,
@@ -98,6 +119,22 @@ const userSchema = new mongoose.Schema(
       instagram: { type: String, default: "" },
       linkedin: { type: String, default: "" },
     },
+    followers: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+    following: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+    connections: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+    connectionRequests: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
   },
   { timestamps: true }
 );

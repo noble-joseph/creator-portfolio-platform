@@ -16,7 +16,12 @@ export default function Login() {
     const data = await res.json();
     if (!res.ok) return alert(data.message);
     localStorage.setItem("accessToken", data.accessToken);
+    localStorage.setItem("refreshToken", data.refreshToken);
     window.location.href = "/dashboard";
+  };
+
+  const handleGoogleSignIn = () => {
+    window.location.href = "http://localhost:5000/api/auth/google";
   };
 
   return (
@@ -37,16 +42,26 @@ export default function Login() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <button type="submit" className="w-full py-3 bg-purple-600 rounded-lg">
+        <button type="submit" className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors duration-200">
           Log In
         </button>
       </form>
+
+      {/* Google Sign-In Button */}
+      <div className="mt-4 text-center">
+        <button
+          onClick={handleGoogleSignIn}
+          className="w-full py-3 bg-red-600 rounded-lg hover:bg-red-700 transition text-white"
+        >
+          Sign in with Google
+        </button>
+      </div>
 
       {/* ✅ Register Button */}
       <div className="mt-6 text-center">
         <Link
           to="/register"
-          className="inline-block w-full py-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition"
+          className="inline-block w-full py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors duration-200 text-center"
         >
           Create New Account
         </Link>

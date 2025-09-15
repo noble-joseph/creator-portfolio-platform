@@ -65,15 +65,20 @@ export default function Navbar() {
             </a>
           )}
         </div>
-        <button
-          onClick={() => {
-            localStorage.removeItem("accessToken");
-            window.location.href = "/login";
-          }}
-          className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white font-medium rounded-full hover:from-red-700 hover:to-red-800 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-red-500/20"
-        >
-          Logout
-        </button>
+        <div className="space-x-4">
+          <a href="/dashboard" className="hover:text-purple-400">Dashboard</a>
+          <a href="/connections" className="hover:text-purple-400">Connections</a>
+          <a href="/discover" className="hover:text-purple-400">Discover</a>
+          <button
+            onClick={() => {
+              localStorage.removeItem("accessToken");
+              window.location.href = "/login";
+            }}
+            className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white font-medium rounded-full hover:from-red-700 hover:to-red-800 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-red-500/20"
+          >
+            Logout
+          </button>
+        </div>
       </div>
     </nav>
   );

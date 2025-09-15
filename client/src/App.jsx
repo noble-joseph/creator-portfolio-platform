@@ -5,6 +5,10 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Portfolio from "./pages/Portfolio";
 import PublicProfile from "./pages/PublicProfile";
+import AuthCallback from "./pages/AuthCallback";
+import AdminDashboard from "./pages/AdminDashboard";
+import Connections from "./pages/Connections";
+import UserDiscovery from "./pages/UserDiscovery";
 
 export default function App() {
   return (
@@ -16,6 +20,10 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/portfolio" element={<Portfolio />} />
         <Route path="/profile/:userId" element={<PublicProfile />} />
+        <Route path="/connections" element={<Connections />} />
+        <Route path="/discover" element={<UserDiscovery />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
     </Router>
   );

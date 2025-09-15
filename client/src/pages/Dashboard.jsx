@@ -79,7 +79,7 @@ export default function Dashboard() {
             )}
 
             {/* Profile Photo */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 -bottom-16 z-10">
+            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-0 z-10">
               {userData.profilePhoto ? (
                 <img
                   src={userData.profilePhoto}
@@ -99,6 +99,7 @@ export default function Dashboard() {
                 </span>
               </div>
             </div>
+
           </div>
         )}
 
@@ -140,7 +141,10 @@ export default function Dashboard() {
           <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-blue-500 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/10">
             <h2 className="text-xl font-bold mb-2 text-blue-400">Connections</h2>
             <p className="text-gray-300 mb-4">Connect with other creators and collaborators</p>
-            <button className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors duration-300">
+            <button
+              onClick={() => navigate("/connections")}
+              className="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors duration-300"
+            >
               View Connections
             </button>
           </div>

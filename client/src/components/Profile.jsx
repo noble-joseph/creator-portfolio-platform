@@ -11,6 +11,7 @@ const Profile = () => {
   const [bio, setBio] = useState("");
   const [profilePhoto, setProfilePhoto] = useState("");
   const [coverPhoto, setCoverPhoto] = useState("");
+  const [profilePhotoFile, setProfilePhotoFile] = useState(null);
   const [socialMedia, setSocialMedia] = useState({
     facebook: "",
     twitter: "",
@@ -106,6 +107,43 @@ const Profile = () => {
     }));
   };
 
+  const handleProfilePhotoChange = (e) => {
+    setProfilePhotoFile(e.target.files[0]);
+  };
+
+  const handleProfilePhotoUpload = async () => {
+    if (!profilePhotoFile) {
+      alert("Please select a file first.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('profilePhoto', profilePhotoFile);
+
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/updateProfilePicture`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setProfilePhoto(data.user.profilePhoto);
+        setProfilePhotoFile(null);
+        alert("Profile picture updated successfully!");
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to upload profile picture: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error("Error uploading profile picture:", error);
+      alert("Error uploading profile picture.");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const response = await fetch(`${API_BASE}/api/auth/updateProfile`, {
@@ -120,7 +158,8 @@ const Profile = () => {
     if (response.ok) {
       alert("Profile updated successfully!");
     } else {
-      alert("Failed to update profile.");
+      const errorData = await response.json();
+      alert(`Failed to update profile: ${errorData.message || 'Unknown error'}`);
     }
   };
 
@@ -133,73 +172,80 @@ const Profile = () => {
     : musicianSpecializations;
 
   return (
-    <div className="bg-gray-800 p-6 rounded-lg">
-      <h2 className="text-xl font-bold mb-4 text-purple-400">Profile</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block text-gray-300 mb-2">Role</label>
-          <div className="p-2 bg-gray-700 text-white rounded capitalize">
-            {userRole}
+    <div className="max-w-4xl mx-auto bg-gray-800 p-8 rounded-xl shadow-2xl">
+      <h2 className="text-3xl font-bold mb-8 text-purple-400 text-center">Edit Your Profile</h2>
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Basic Information Section */}
+        <div className="bg-gray-700 p-6 rounded-lg">
+          <h3 className="text-xl font-semibold mb-4 text-purple-300">Basic Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-gray-300 mb-2 font-medium">Role</label>
+              <div className="p-3 bg-gray-600 text-white rounded-lg capitalize font-semibold">
+                {userRole}
+              </div>
+            </div>
+            <div>
+              <label className="block text-gray-300 mb-2 font-medium">Specialization</label>
+              <select
+                value={specialization}
+                onChange={(e) => setSpecialization(e.target.value)}
+                className="w-full p-3 bg-gray-600 text-white rounded-lg border border-gray-500 focus:border-purple-400 focus:outline-none transition-colors"
+                required
+              >
+                <option value="">Select your specialization</option>
+                {currentSpecializations.map((spec) => (
+                  <option key={spec} value={spec}>
+                    {spec}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="mt-6">
+            <label className="block text-gray-300 mb-2 font-medium">Specialization Details</label>
+            <input
+              type="text"
+              value={specializationDetails}
+              onChange={(e) => setSpecializationDetails(e.target.value)}
+              className="w-full p-3 bg-gray-600 text-white rounded-lg border border-gray-500 focus:border-purple-400 focus:outline-none transition-colors"
+              placeholder="Additional details about your specialization"
+            />
           </div>
         </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-300 mb-2">Specialization</label>
-          <select
-            value={specialization}
-            onChange={(e) => setSpecialization(e.target.value)}
-            className="w-full p-2 bg-gray-700 text-white rounded"
-            required
-          >
-            <option value="">Select your specialization</option>
-            {currentSpecializations.map((spec) => (
-              <option key={spec} value={spec}>
-                {spec}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-300 mb-2">Specialization Details</label>
-          <input
-            type="text"
-            value={specializationDetails}
-            onChange={(e) => setSpecializationDetails(e.target.value)}
-            className="w-full p-2 bg-gray-700 text-white rounded"
-            placeholder="Additional details about your specialization"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-300 mb-2">Experiences</label>
+        {/* Experiences Section */}
+        <div className="bg-gray-700 p-6 rounded-lg">
+          <h3 className="text-xl font-semibold mb-4 text-purple-300">Experiences</h3>
           {experiences.map((experience, index) => (
-            <div key={index} className="mb-4 p-4 bg-gray-700 rounded-lg">
-              <input
-                type="text"
-                name="title"
-                value={experience.title}
-                onChange={(e) => handleExperienceChange(index, e)}
-                placeholder="Experience Title"
-                className="w-full p-2 bg-gray-600 text-white rounded mb-2"
-                required
-              />
-              <input
-                type="text"
-                name="company"
-                value={experience.company}
-                onChange={(e) => handleExperienceChange(index, e)}
-                placeholder="Company"
-                className="w-full p-2 bg-gray-600 text-white rounded mb-2"
-                required
-              />
+            <div key={index} className="mb-6 p-4 bg-gray-600 rounded-lg border border-gray-500">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <input
+                  type="text"
+                  name="title"
+                  value={experience.title}
+                  onChange={(e) => handleExperienceChange(index, e)}
+                  placeholder="Experience Title"
+                  className="p-3 bg-gray-500 text-white rounded-lg border border-gray-400 focus:border-purple-400 focus:outline-none transition-colors"
+                  required
+                />
+                <input
+                  type="text"
+                  name="company"
+                  value={experience.company}
+                  onChange={(e) => handleExperienceChange(index, e)}
+                  placeholder="Company"
+                  className="p-3 bg-gray-500 text-white rounded-lg border border-gray-400 focus:border-purple-400 focus:outline-none transition-colors"
+                  required
+                />
+              </div>
               <input
                 type="text"
                 name="duration"
                 value={experience.duration}
                 onChange={(e) => handleExperienceChange(index, e)}
                 placeholder="Duration (e.g., 2020-2022)"
-                className="w-full p-2 bg-gray-600 text-white rounded mb-2"
+                className="w-full p-3 bg-gray-500 text-white rounded-lg border border-gray-400 focus:border-purple-400 focus:outline-none transition-colors mb-4"
                 required
               />
               <textarea
@@ -207,13 +253,13 @@ const Profile = () => {
                 value={experience.description}
                 onChange={(e) => handleExperienceChange(index, e)}
                 placeholder="Description of your role and achievements"
-                className="w-full p-2 bg-gray-600 text-white rounded mb-2"
+                className="w-full p-3 bg-gray-500 text-white rounded-lg border border-gray-400 focus:border-purple-400 focus:outline-none transition-colors resize-none"
                 rows="3"
               />
               <button
                 type="button"
                 onClick={() => removeExperience(index)}
-                className="text-red-500 hover:text-red-400 text-sm"
+                className="mt-3 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm font-medium"
               >
                 Remove Experience
               </button>
@@ -222,85 +268,110 @@ const Profile = () => {
           <button
             type="button"
             onClick={addExperience}
-            className="text-blue-500 hover:text-blue-400 text-sm"
+            className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium"
           >
             + Add Experience
           </button>
         </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-300 mb-2">Skills</label>
-          <input
-            type="text"
-            value={skills.join(", ")}
-            onChange={(e) => setSkills(e.target.value.split(",").map(skill => skill.trim()))}
-            className="w-full p-2 bg-gray-700 text-white rounded"
-            placeholder="Comma-separated skills (e.g., Photography, Photoshop, Lighting)"
-          />
+        {/* Skills and Bio Section */}
+        <div className="bg-gray-700 p-6 rounded-lg">
+          <h3 className="text-xl font-semibold mb-4 text-purple-300">Skills & Bio</h3>
+          <div className="mb-6">
+            <label className="block text-gray-300 mb-2 font-medium">Skills</label>
+            <input
+              type="text"
+              value={skills.join(", ")}
+              onChange={(e) => setSkills(e.target.value.split(",").map(skill => skill.trim()))}
+              className="w-full p-3 bg-gray-600 text-white rounded-lg border border-gray-500 focus:border-purple-400 focus:outline-none transition-colors"
+              placeholder="Comma-separated skills (e.g., Photography, Photoshop, Lighting)"
+            />
+          </div>
+          <div>
+            <label className="block text-gray-300 mb-2 font-medium">Bio</label>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              className="w-full p-3 bg-gray-600 text-white rounded-lg border border-gray-500 focus:border-purple-400 focus:outline-none transition-colors resize-none"
+              placeholder="Tell us about yourself, your background, and what makes you unique"
+              rows="4"
+            />
+          </div>
         </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-300 mb-2">Bio</label>
-          <textarea
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            className="w-full p-2 bg-gray-700 text-white rounded"
-            placeholder="Tell us about yourself, your background, and what makes you unique"
-            rows="4"
-          />
+        {/* Photos Section */}
+        <div className="bg-gray-700 p-6 rounded-lg">
+          <h3 className="text-xl font-semibold mb-4 text-purple-300">Photos</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-gray-300 mb-2 font-medium">Profile Photo</label>
+              {profilePhoto && (
+                <div className="mb-3">
+                  <img src={`${API_BASE}/uploads/${profilePhoto}`} alt="Profile" className="w-24 h-24 rounded-full object-cover border-2 border-purple-400" />
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleProfilePhotoChange}
+                className="w-full p-3 bg-gray-600 text-white rounded-lg border border-gray-500 focus:border-purple-400 focus:outline-none transition-colors mb-3"
+              />
+              <button
+                type="button"
+                onClick={handleProfilePhotoUpload}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+              >
+                Upload Profile Picture
+              </button>
+            </div>
+            <div>
+              <label className="block text-gray-300 mb-2 font-medium">Cover Photo URL</label>
+              {coverPhoto && (
+                <div className="mb-3">
+                  <img src={coverPhoto} alt="Cover" className="w-full h-20 object-cover rounded-lg border border-gray-500" />
+                </div>
+              )}
+              <input
+                type="text"
+                value={coverPhoto}
+                onChange={(e) => setCoverPhoto(e.target.value)}
+                className="w-full p-3 bg-gray-600 text-white rounded-lg border border-gray-500 focus:border-purple-400 focus:outline-none transition-colors"
+                placeholder="URL to your cover photo"
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-300 mb-2">Profile Photo URL</label>
-          <input
-            type="text"
-            value={profilePhoto}
-            onChange={(e) => setProfilePhoto(e.target.value)}
-            className="w-full p-2 bg-gray-700 text-white rounded"
-            placeholder="URL to your profile photo"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-300 mb-2">Cover Photo URL</label>
-          <input
-            type="text"
-            value={coverPhoto}
-            onChange={(e) => setCoverPhoto(e.target.value)}
-            className="w-full p-2 bg-gray-700 text-white rounded"
-            placeholder="URL to your cover photo"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-300 mb-2">Social Media Links</label>
-          <div className="space-y-2">
+        {/* Social Media Section */}
+        <div className="bg-gray-700 p-6 rounded-lg">
+          <h3 className="text-xl font-semibold mb-4 text-purple-300">Social Media Links</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input
               type="text"
               value={socialMedia.facebook}
               onChange={(e) => handleSocialMediaChange('facebook', e.target.value)}
-              className="w-full p-2 bg-gray-700 text-white rounded"
+              className="p-3 bg-gray-600 text-white rounded-lg border border-gray-500 focus:border-purple-400 focus:outline-none transition-colors"
               placeholder="Facebook profile URL"
             />
             <input
               type="text"
               value={socialMedia.twitter}
               onChange={(e) => handleSocialMediaChange('twitter', e.target.value)}
-              className="w-full p-2 bg-gray-700 text-white rounded"
+              className="p-3 bg-gray-600 text-white rounded-lg border border-gray-500 focus:border-purple-400 focus:outline-none transition-colors"
               placeholder="Twitter profile URL"
             />
             <input
               type="text"
               value={socialMedia.instagram}
               onChange={(e) => handleSocialMediaChange('instagram', e.target.value)}
-              className="w-full p-2 bg-gray-700 text-white rounded"
+              className="p-3 bg-gray-600 text-white rounded-lg border border-gray-500 focus:border-purple-400 focus:outline-none transition-colors"
               placeholder="Instagram profile URL"
             />
             <input
               type="text"
               value={socialMedia.linkedin}
               onChange={(e) => handleSocialMediaChange('linkedin', e.target.value)}
-              className="w-full p-2 bg-gray-700 text-white rounded"
+              className="p-3 bg-gray-600 text-white rounded-lg border border-gray-500 focus:border-purple-400 focus:outline-none transition-colors"
               placeholder="LinkedIn profile URL"
             />
           </div>
@@ -308,7 +379,7 @@ const Profile = () => {
 
         <button
           type="submit"
-          className="w-full py-2 bg-purple-600 hover:bg-purple-700 rounded transition-colors"
+          className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-semibold text-lg shadow-lg"
         >
           Save Changes
         </button>

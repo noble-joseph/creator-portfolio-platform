@@ -1,6 +1,7 @@
 // routes/creatorRoutes.js
 import express from "express";
 import protect from "../middleware/authMiddleware.js";
+import { uploadPortfolio } from "../middleware/uploadMiddleware.js";
 import {
   getAllCreators,
   getCreatorProfile,
@@ -21,11 +22,11 @@ router.get("/dashboard", protect, (req, res) => {
 });
 
 // Portfolio routes
-router.post("/portfolio", protect, createPortfolio);
+router.post("/portfolio", protect, uploadPortfolio, createPortfolio);
 router.get("/portfolio", protect, getUserPortfolios);
 router.get("/portfolio/latest", getLatestPortfolios); // Get latest portfolio items
 router.get("/portfolio/public/:userId", getPublicPortfolios); // Public access
-router.put("/portfolio/:id", protect, updatePortfolio);
+router.put("/portfolio/:id", protect, uploadPortfolio, updatePortfolio);
 router.delete("/portfolio/:id", protect, deletePortfolio);
 
 // Legacy routes (can be removed if not needed)

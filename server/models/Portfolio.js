@@ -54,6 +54,10 @@ const portfolioSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    mediaFiles: [{
+      type: String,
+      trim: true,
+    }],
   },
   { timestamps: true }
 );

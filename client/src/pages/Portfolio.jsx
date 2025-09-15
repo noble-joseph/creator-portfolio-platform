@@ -11,8 +11,9 @@ export default function Portfolio() {
     category: "music",
     tags: "",
     privacy: "private",
-    thumbnail: "",
   });
+  const [thumbnailFile, setThumbnailFile] = useState(null);
+  const [mediaFiles, setMediaFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
 
@@ -42,6 +43,14 @@ export default function Portfolio() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handleThumbnailChange = (e) => {
+    setThumbnailFile(e.target.files[0]);
+  };
+
+  const handleMediaFilesChange = (e) => {
+    setMediaFiles(Array.from(e.target.files));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const url = editingId
@@ -50,14 +59,30 @@ export default function Portfolio() {
     const method = editingId ? "PUT" : "POST";
 
     try {
+      const formData = new FormData();
+      formData.append("title", form.title);
+      formData.append("description", form.description);
+      formData.append("link", form.link);
+      formData.append("category", form.category);
+      formData.append("tags", form.tags);
+      formData.append("privacy", form.privacy);
+
+      if (thumbnailFile) {
+        formData.append("thumbnail", thumbnailFile);
+      }
+
+      mediaFiles.forEach((file, index) => {
+        formData.append("mediaFiles", file);
+      });
+
       const res = await fetch(url, {
         method,
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
-        body: JSON.stringify(form),
+        body: formData,
       });
+
       if (res.ok) {
         setForm({
           title: "",
@@ -66,12 +91,14 @@ export default function Portfolio() {
           category: "music",
           tags: "",
           privacy: "private",
-          thumbnail: "",
         });
+        setThumbnailFile(null);
+        setMediaFiles([]);
         setEditingId(null);
         fetchPortfolios();
       } else {
-        alert("Failed to save portfolio item");
+        const errorData = await res.json();
+        alert(`Failed to save portfolio item: ${errorData.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error("Error saving portfolio item", error);
@@ -202,14 +229,23 @@ export default function Portfolio() {
           </div>
 
           <div className="mb-4">
-            <label className="block mb-1">Thumbnail URL (optional)</label>
+            <label className="block mb-1">Thumbnail (optional)</label>
             <input
-              type="url"
-              name="thumbnail"
-              value={form.thumbnail}
-              onChange={handleChange}
+              type="file"
+              accept="image/*"
+              onChange={handleThumbnailChange}
               className="w-full p-2 rounded bg-gray-700 text-white"
-              placeholder="https://example.com/image.jpg"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block mb-1">Media Files (optional)</label>
+            <input
+              type="file"
+              accept="image/*,video/*,audio/*"
+              multiple
+              onChange={handleMediaFilesChange}
+              className="w-full p-2 rounded bg-gray-700 text-white"
             />
           </div>
 

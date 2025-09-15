@@ -1,4 +1,5 @@
 import Portfolio from "../models/Portfolio.js";
+import User from "../models/User.js";
 
 export const getAllCreators = (req, res) => {
   res.send("All creators endpoint");
@@ -11,7 +12,11 @@ export const getCreatorProfile = (req, res) => {
 // Portfolio controller functions
 export const createPortfolio = async (req, res) => {
   try {
-    const { title, description, link, category, tags, privacy, thumbnail } = req.body;
+    const { title, description, link, category, tags, privacy } = req.body;
+
+    // Handle file uploads
+    const thumbnail = req.files?.thumbnail ? req.files.thumbnail[0].filename : req.body.thumbnail || "";
+    const mediaFiles = req.files?.mediaFiles ? req.files.mediaFiles.map(file => file.filename) : [];
 
     const portfolio = new Portfolio({
       user: req.user._id,
@@ -22,6 +27,7 @@ export const createPortfolio = async (req, res) => {
       tags: tags ? tags.split(",").map(tag => tag.trim()) : [],
       privacy: privacy || "private",
       thumbnail,
+      mediaFiles,
     });
 
     const savedPortfolio = await portfolio.save();
@@ -53,10 +59,29 @@ export const getUserPortfolios = async (req, res) => {
 export const getPublicPortfolios = async (req, res) => {
   try {
     const { userId } = req.params;
-    const portfolios = await Portfolio.find({
-      user: userId,
-      privacy: "public",
-    })
+    const currentUserId = req.user ? req.user.id : null;
+
+    // Build query based on privacy and connection status
+    let query = { user: userId };
+
+    if (currentUserId) {
+      // Check if current user is connected to the portfolio owner
+      const portfolioOwner = await User.findById(userId);
+      const isConnected = portfolioOwner && portfolioOwner.connections.includes(currentUserId);
+
+      if (isConnected) {
+        // Connected users can see both public and private portfolios
+        query = { user: userId };
+      } else {
+        // Non-connected users can only see public portfolios
+        query.privacy = "public";
+      }
+    } else {
+      // Unauthenticated users can only see public portfolios
+      query.privacy = "public";
+    }
+
+    const portfolios = await Portfolio.find(query)
       .sort({ createdAt: -1 })
       .populate("user", "name username");
 
@@ -85,7 +110,7 @@ export const getLatestPortfolios = async (req, res) => {
 export const updatePortfolio = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, link, category, tags, privacy, thumbnail } = req.body;
+    const { title, description, link, category, tags, privacy } = req.body;
 
     const portfolio = await Portfolio.findOne({ _id: id, user: req.user._id });
 
@@ -93,13 +118,18 @@ export const updatePortfolio = async (req, res) => {
       return res.status(404).json({ message: "Portfolio item not found" });
     }
 
+    // Handle file uploads
+    const thumbnail = req.files?.thumbnail ? req.files.thumbnail[0].filename : req.body.thumbnail || portfolio.thumbnail;
+    const mediaFiles = req.files?.mediaFiles ? req.files.mediaFiles.map(file => file.filename) : portfolio.mediaFiles;
+
     portfolio.title = title || portfolio.title;
     portfolio.description = description || portfolio.description;
     portfolio.link = link || portfolio.link;
     portfolio.category = category || portfolio.category;
     portfolio.tags = tags ? tags.split(",").map(tag => tag.trim()) : portfolio.tags;
     portfolio.privacy = privacy || portfolio.privacy;
-    portfolio.thumbnail = thumbnail || portfolio.thumbnail;
+    portfolio.thumbnail = thumbnail;
+    portfolio.mediaFiles = mediaFiles;
 
     const updatedPortfolio = await portfolio.save();
     await updatedPortfolio.populate("user", "name username");

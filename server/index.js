@@ -1,9 +1,12 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import session from "express-session";
+import passport from "./config/passport.js";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import creatorRoutes from "./routes/creatorRoutes.js"; // ✅ new
+import adminRoutes from "./routes/adminRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 
 dotenv.config();
@@ -27,6 +30,19 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// Session middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-secret-key', // Use env var or default
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false } // Set to true in production with HTTPS
+}));
+
+// Passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Log every request (add this before app.use("/api/auth", authRoutes))
 app.use((req, res, next) => {
   console.log("👉 Request:", req.method, req.url, req.body);
@@ -43,6 +59,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/creator", creatorRoutes); // ✅ new
+app.use("/api/admin", adminRoutes);
 
 // Error middleware
 app.use(notFound);
