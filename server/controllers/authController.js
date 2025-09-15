@@ -223,6 +223,7 @@ export const getCurrentUser = async (req, res) => {
 export const getUserProfile = async (req, res) => {
   try {
     const { userId } = req.params;
+<<<<<<< HEAD
     const currentUserId = req.user ? req.user.id : null; // Get current user if authenticated
 
     const user = await User.findById(userId);
@@ -247,6 +248,11 @@ export const getUserProfile = async (req, res) => {
         }
       }
 
+=======
+    const user = await User.findById(userId);
+
+    if (user) {
+>>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
       res.json({
         _id: user._id,
         name: user.name,
@@ -257,6 +263,7 @@ export const getUserProfile = async (req, res) => {
         experiences: user.experiences,
         skills: user.skills,
         bio: user.bio,
+<<<<<<< HEAD
         profilePhoto: user.profilePhoto,
         coverPhoto: user.coverPhoto,
         socialMedia: user.socialMedia,
@@ -265,6 +272,8 @@ export const getUserProfile = async (req, res) => {
         connectionsCount: user.connections.length,
         isFollowing: isFollowing,
         connectionStatus: connectionStatus,
+=======
+>>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
       });
     } else {
       res.status(404).json({ message: "User not found" });
@@ -274,6 +283,7 @@ export const getUserProfile = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+<<<<<<< HEAD
 
 // @desc    Google OAuth callback
 // @route   GET /api/auth/google/callback
@@ -591,3 +601,5 @@ export const getUsersForDiscovery = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+=======
+>>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
