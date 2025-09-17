@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { API_BASE } from "../config";
 import Navbar from "../components/Navbar";
+import { Link } from "react-router-dom";
 
 export default function UserDiscovery() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -10,14 +11,14 @@ export default function UserDiscovery() {
   const fetchUsers = async (query) => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/api/auth/search-users?q=${encodeURIComponent(query)}`, {
+      const response = await fetch(`${API_BASE}/api/auth/discover?search=${encodeURIComponent(query)}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
       if (response.ok) {
         const data = await response.json();
-        setUsers(data);
+        setUsers(data.users || []);
       }
     } catch (error) {
       console.error("Failed to fetch users", error);
@@ -77,7 +78,7 @@ export default function UserDiscovery() {
         <div className="space-y-4">
           {users.map((user) => (
             <div key={user._id} className="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
-              <div className="flex items-center space-x-4">
+              <Link to={`/profile/${user._id}`} className="flex items-center space-x-4 flex-grow">
                 <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
                   {user.profilePhoto ? (
                     <img
@@ -96,7 +97,7 @@ export default function UserDiscovery() {
                   <p className="text-gray-400 text-sm">@{user.username}</p>
                   <p className="text-purple-400 text-sm capitalize">{user.role}</p>
                 </div>
-              </div>
+              </Link>
               <button
                 onClick={() => handleSendConnectionRequest(user._id)}
                 className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition-colors"

@@ -1,8 +1,5 @@
 import Portfolio from "../models/Portfolio.js";
-<<<<<<< HEAD
 import User from "../models/User.js";
-=======
->>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
 
 export const getAllCreators = (req, res) => {
   res.send("All creators endpoint");
@@ -15,15 +12,11 @@ export const getCreatorProfile = (req, res) => {
 // Portfolio controller functions
 export const createPortfolio = async (req, res) => {
   try {
-<<<<<<< HEAD
     const { title, description, link, category, tags, privacy } = req.body;
 
     // Handle file uploads
     const thumbnail = req.files?.thumbnail ? req.files.thumbnail[0].filename : req.body.thumbnail || "";
     const mediaFiles = req.files?.mediaFiles ? req.files.mediaFiles.map(file => file.filename) : [];
-=======
-    const { title, description, link, category, tags, privacy, thumbnail } = req.body;
->>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
 
     const portfolio = new Portfolio({
       user: req.user._id,
@@ -34,10 +27,7 @@ export const createPortfolio = async (req, res) => {
       tags: tags ? tags.split(",").map(tag => tag.trim()) : [],
       privacy: privacy || "private",
       thumbnail,
-<<<<<<< HEAD
       mediaFiles,
-=======
->>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
     });
 
     const savedPortfolio = await portfolio.save();
@@ -69,7 +59,6 @@ export const getUserPortfolios = async (req, res) => {
 export const getPublicPortfolios = async (req, res) => {
   try {
     const { userId } = req.params;
-<<<<<<< HEAD
     const currentUserId = req.user ? req.user.id : null;
 
     // Build query based on privacy and connection status
@@ -93,12 +82,6 @@ export const getPublicPortfolios = async (req, res) => {
     }
 
     const portfolios = await Portfolio.find(query)
-=======
-    const portfolios = await Portfolio.find({
-      user: userId,
-      privacy: "public",
-    })
->>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
       .sort({ createdAt: -1 })
       .populate("user", "name username");
 
@@ -109,7 +92,6 @@ export const getPublicPortfolios = async (req, res) => {
   }
 };
 
-<<<<<<< HEAD
 export const getLatestPortfolios = async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 3;
@@ -129,12 +111,6 @@ export const updatePortfolio = async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description, link, category, tags, privacy } = req.body;
-=======
-export const updatePortfolio = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { title, description, link, category, tags, privacy, thumbnail } = req.body;
->>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
 
     const portfolio = await Portfolio.findOne({ _id: id, user: req.user._id });
 
@@ -142,25 +118,18 @@ export const updatePortfolio = async (req, res) => {
       return res.status(404).json({ message: "Portfolio item not found" });
     }
 
-<<<<<<< HEAD
     // Handle file uploads
     const thumbnail = req.files?.thumbnail ? req.files.thumbnail[0].filename : req.body.thumbnail || portfolio.thumbnail;
     const mediaFiles = req.files?.mediaFiles ? req.files.mediaFiles.map(file => file.filename) : portfolio.mediaFiles;
 
-=======
->>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
     portfolio.title = title || portfolio.title;
     portfolio.description = description || portfolio.description;
     portfolio.link = link || portfolio.link;
     portfolio.category = category || portfolio.category;
     portfolio.tags = tags ? tags.split(",").map(tag => tag.trim()) : portfolio.tags;
     portfolio.privacy = privacy || portfolio.privacy;
-<<<<<<< HEAD
     portfolio.thumbnail = thumbnail;
     portfolio.mediaFiles = mediaFiles;
-=======
-    portfolio.thumbnail = thumbnail || portfolio.thumbnail;
->>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
 
     const updatedPortfolio = await portfolio.save();
     await updatedPortfolio.populate("user", "name username");

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { API_BASE } from "../config";
 import Navbar from "../components/Navbar";
+import { Link } from "react-router-dom";
 
 export default function Connections() {
   const [connectionsData, setConnectionsData] = useState(null);
@@ -116,7 +117,7 @@ export default function Connections() {
 
   const UserCard = ({ user, actions }) => (
     <div className="bg-gray-800 rounded-lg p-4 flex items-center justify-between hover:bg-gray-750 transition-colors">
-      <div className="flex items-center space-x-4">
+      <Link to={`/profile/${user._id}`} className="flex items-center space-x-4 flex-grow">
         <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
           {user.profilePhoto ? (
             <img
@@ -135,7 +136,7 @@ export default function Connections() {
           <p className="text-gray-400 text-sm">@{user.username}</p>
           <p className="text-purple-400 text-sm capitalize">{user.role}</p>
         </div>
-      </div>
+      </Link>
       <div className="flex space-x-2">
         {actions}
       </div>

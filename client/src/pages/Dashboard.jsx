@@ -8,7 +8,6 @@ import Profile from "../components/Profile";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-<<<<<<< HEAD
   const [userData, setUserData] = useState(null);
   const [portfolio, setPortfolio] = useState([]);
 
@@ -33,8 +32,6 @@ export default function Dashboard() {
       .then((data) => setPortfolio(data))
       .catch((err) => console.error("Failed to fetch portfolio", err));
   }, []);
-=======
->>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white">
@@ -112,7 +109,6 @@ export default function Dashboard() {
             <h2 className="text-2xl font-bold mb-4 text-purple-400">Profile Information</h2>
             <Profile />
           </div>
-<<<<<<< HEAD
         )}
 
         {/* Portfolio Section */}
@@ -130,19 +126,6 @@ export default function Dashboard() {
             ) : (
               <p className="text-gray-400">No portfolio items to display.</p>
             )}
-=======
-          
-          {/* Portfolio Card */}
-          <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-purple-500 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-purple-500/10">
-            <h2 className="text-xl font-bold mb-2 text-purple-400">My Portfolio</h2>
-            <p className="text-gray-300 mb-4">Manage and showcase your creative work</p>
-            <button
-              onClick={() => navigate("/portfolio")}
-              className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors duration-300"
-            >
-              View Portfolio
-            </button>
->>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
           </div>
           <button
             onClick={() => navigate("/portfolio")}

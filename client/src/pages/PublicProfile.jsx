@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { API_BASE } from "../config";
 import Navbar from "../components/Navbar";
-<<<<<<< HEAD
 import { useAuth } from "../contexts/AuthContext";
 
 export default function PublicProfile() {
@@ -11,41 +10,24 @@ export default function PublicProfile() {
   const [user, setUser] = useState(null);
   const [portfolios, setPortfolios] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [following, setFollowing] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('none'); // 'none', 'connected', 'request_sent', 'request_received'
-=======
-
-export default function PublicProfile() {
-  const { userId } = useParams();
-  const [user, setUser] = useState(null);
-  const [portfolios, setPortfolios] = useState([]);
-  const [loading, setLoading] = useState(true);
->>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         const [userRes, portfolioRes] = await Promise.all([
-<<<<<<< HEAD
           fetch(`${API_BASE}/api/auth/profile/${userId}`, {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
             }
           }),
-=======
-          fetch(`${API_BASE}/api/auth/profile/${userId}`),
->>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
           fetch(`${API_BASE}/api/creator/portfolio/public/${userId}`)
         ]);
 
         if (userRes.ok) {
           const userData = await userRes.json();
           setUser(userData);
-<<<<<<< HEAD
-          setFollowing(userData.isFollowing || false);
           setConnectionStatus(userData.connectionStatus || 'none');
-=======
->>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
         }
 
         if (portfolioRes.ok) {
@@ -64,52 +46,7 @@ export default function PublicProfile() {
     }
   }, [userId]);
 
-<<<<<<< HEAD
-  const handleFollow = async () => {
-    try {
-      const response = await fetch(`${API_BASE}/api/auth/follow/${userId}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-          'Content-Type': 'application/json'
-        }
-      });
 
-      if (response.ok) {
-        setFollowing(true);
-        setUser(prev => ({
-          ...prev,
-          followersCount: prev.followersCount + 1,
-          isFollowing: true
-        }));
-      }
-    } catch (error) {
-      console.error("Failed to follow user", error);
-    }
-  };
-
-  const handleUnfollow = async () => {
-    try {
-      const response = await fetch(`${API_BASE}/api/auth/unfollow/${userId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        setFollowing(false);
-        setUser(prev => ({
-          ...prev,
-          followersCount: prev.followersCount - 1,
-          isFollowing: false
-        }));
-      }
-    } catch (error) {
-      console.error("Failed to unfollow user", error);
-    }
-  };
 
   const handleSendConnectionRequest = async () => {
     try {
@@ -199,8 +136,6 @@ export default function PublicProfile() {
     }
   };
 
-=======
->>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white flex justify-center items-center">
@@ -229,7 +164,6 @@ export default function PublicProfile() {
       <Navbar />
       <div className="container mx-auto px-6 py-8">
         {/* Profile Header */}
-<<<<<<< HEAD
         <div className="relative text-center mb-12">
           {/* Cover Photo */}
           {user.coverPhoto && (
@@ -273,18 +207,6 @@ export default function PublicProfile() {
 
             {/* Connect Button and Stats */}
             <div className="flex flex-col items-center space-y-4 mt-6">
-              {/* Follower/Following Stats */}
-              <div className="flex space-x-8 text-gray-400">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{user.followersCount || 0}</div>
-                  <div className="text-sm">Followers</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{user.followingCount || 0}</div>
-                  <div className="text-sm">Following</div>
-                </div>
-              </div>
-
               {/* Connect Button */}
               {currentUser && currentUser._id !== userId && (
                 <div className="flex flex-col space-y-2">
@@ -329,18 +251,6 @@ export default function PublicProfile() {
                       Remove Connection
                     </button>
                   )}
-
-                  {/* Follow Button */}
-                  <button
-                    onClick={following ? handleUnfollow : handleFollow}
-                    className={`px-8 py-3 rounded-full font-semibold transition-all duration-200 ${
-                      following
-                        ? 'bg-gray-700 text-white hover:bg-gray-600'
-                        : 'bg-purple-600 text-white hover:bg-purple-700'
-                    }`}
-                  >
-                    {following ? 'Following' : 'Follow'}
-                  </button>
                 </div>
               )}
             </div>
@@ -371,21 +281,6 @@ export default function PublicProfile() {
               </div>
             )}
           </div>
-=======
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-            {user.name}
-          </h1>
-          <p className="text-gray-400 text-lg mb-2">@{user.username}</p>
-          <p className="text-purple-400 text-xl capitalize mb-2">{user.role}</p>
-          <p className="text-gray-300 mb-4">{user.specialization}</p>
-          {user.specializationDetails && (
-            <p className="text-gray-400 mb-4">{user.specializationDetails}</p>
-          )}
-          {user.bio && (
-            <p className="text-gray-300 max-w-2xl mx-auto">{user.bio}</p>
-          )}
->>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
         </div>
 
         {/* Skills */}

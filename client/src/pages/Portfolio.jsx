@@ -11,14 +11,9 @@ export default function Portfolio() {
     category: "music",
     tags: "",
     privacy: "private",
-<<<<<<< HEAD
   });
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [mediaFiles, setMediaFiles] = useState([]);
-=======
-    thumbnail: "",
-  });
->>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
 
@@ -48,7 +43,6 @@ export default function Portfolio() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-<<<<<<< HEAD
   const handleThumbnailChange = (e) => {
     setThumbnailFile(e.target.files[0]);
   };
@@ -57,8 +51,6 @@ export default function Portfolio() {
     setMediaFiles(Array.from(e.target.files));
   };
 
-=======
->>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
   const handleSubmit = async (e) => {
     e.preventDefault();
     const url = editingId
@@ -67,7 +59,6 @@ export default function Portfolio() {
     const method = editingId ? "PUT" : "POST";
 
     try {
-<<<<<<< HEAD
       const formData = new FormData();
       formData.append("title", form.title);
       formData.append("description", form.description);
@@ -92,16 +83,6 @@ export default function Portfolio() {
         body: formData,
       });
 
-=======
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-        body: JSON.stringify(form),
-      });
->>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
       if (res.ok) {
         setForm({
           title: "",
@@ -110,7 +91,6 @@ export default function Portfolio() {
           category: "music",
           tags: "",
           privacy: "private",
-<<<<<<< HEAD
         });
         setThumbnailFile(null);
         setMediaFiles([]);
@@ -119,14 +99,6 @@ export default function Portfolio() {
       } else {
         const errorData = await res.json();
         alert(`Failed to save portfolio item: ${errorData.message || 'Unknown error'}`);
-=======
-          thumbnail: "",
-        });
-        setEditingId(null);
-        fetchPortfolios();
-      } else {
-        alert("Failed to save portfolio item");
->>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
       }
     } catch (error) {
       console.error("Error saving portfolio item", error);
@@ -141,7 +113,6 @@ export default function Portfolio() {
       category: item.category,
       tags: item.tags.join(", "),
       privacy: item.privacy,
-      thumbnail: item.thumbnail || "",
     });
     setEditingId(item._id);
   };
@@ -257,7 +228,6 @@ export default function Portfolio() {
           </div>
 
           <div className="mb-4">
-<<<<<<< HEAD
             <label className="block mb-1">Thumbnail (optional)</label>
             <input
               type="file"
@@ -275,16 +245,6 @@ export default function Portfolio() {
               multiple
               onChange={handleMediaFilesChange}
               className="w-full p-2 rounded bg-gray-700 text-white"
-=======
-            <label className="block mb-1">Thumbnail URL (optional)</label>
-            <input
-              type="url"
-              name="thumbnail"
-              value={form.thumbnail}
-              onChange={handleChange}
-              className="w-full p-2 rounded bg-gray-700 text-white"
-              placeholder="https://example.com/image.jpg"
->>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
             />
           </div>
 
@@ -305,8 +265,9 @@ export default function Portfolio() {
                   category: "music",
                   tags: "",
                   privacy: "private",
-                  thumbnail: "",
                 });
+                setThumbnailFile(null);
+                setMediaFiles([]);
                 setEditingId(null);
               }}
               className="ml-4 bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded transition-colors"

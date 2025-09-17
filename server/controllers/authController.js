@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import Portfolio from "../models/Portfolio.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/generateToken.js";
 import jwt from "jsonwebtoken";
 
@@ -223,15 +224,12 @@ export const getCurrentUser = async (req, res) => {
 export const getUserProfile = async (req, res) => {
   try {
     const { userId } = req.params;
-<<<<<<< HEAD
     const currentUserId = req.user ? req.user.id : null; // Get current user if authenticated
 
     const user = await User.findById(userId);
+    const portfolios = await Portfolio.find({ user: userId });
 
     if (user) {
-      // Check if current user is following this user
-      const isFollowing = currentUserId ? user.followers.includes(currentUserId) : false;
-
       // Check connection status
       let connectionStatus = 'none';
       if (currentUserId) {
@@ -248,12 +246,11 @@ export const getUserProfile = async (req, res) => {
         }
       }
 
-=======
-    const user = await User.findById(userId);
+      // Determine if current user is connected
+      const isConnected = currentUserId && user.connections.includes(currentUserId);
 
-    if (user) {
->>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
-      res.json({
+      // Prepare profile data to show
+      let profileData = {
         _id: user._id,
         name: user.name,
         username: user.username,
@@ -263,18 +260,23 @@ export const getUserProfile = async (req, res) => {
         experiences: user.experiences,
         skills: user.skills,
         bio: user.bio,
-<<<<<<< HEAD
         profilePhoto: user.profilePhoto,
         coverPhoto: user.coverPhoto,
         socialMedia: user.socialMedia,
-        followersCount: user.followers.length,
-        followingCount: user.following.length,
-        connectionsCount: user.connections.length,
-        isFollowing: isFollowing,
+        connectionsCount: isConnected ? user.connections.length : undefined,
         connectionStatus: connectionStatus,
-=======
->>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
-      });
+      };
+
+      // Filter portfolios based on privacy and connection status
+      if (!isConnected) {
+        // Show only public portfolios
+        profileData.portfolios = portfolios.filter(portfolio => portfolio.privacy === 'public');
+      } else {
+        // If connected, show all portfolios including private
+        profileData.portfolios = portfolios;
+      }
+
+      res.json(profileData);
     } else {
       res.status(404).json({ message: "User not found" });
     }
@@ -283,7 +285,6 @@ export const getUserProfile = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-<<<<<<< HEAD
 
 // @desc    Google OAuth callback
 // @route   GET /api/auth/google/callback
@@ -301,82 +302,9 @@ export const googleCallback = (req, res) => {
   }
 };
 
-// @desc    Follow a user
-// @route   POST /api/auth/follow/:userId
-// @access  Private
-export const followUser = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const currentUserId = req.user.id;
 
-    if (userId === currentUserId) {
-      return res.status(400).json({ message: "You cannot follow yourself" });
-    }
 
-    const userToFollow = await User.findById(userId);
-    const currentUser = await User.findById(currentUserId);
 
-    if (!userToFollow) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Check if already following
-    if (currentUser.following.includes(userId)) {
-      return res.status(400).json({ message: "Already following this user" });
-    }
-
-    // Add to following list of current user
-    currentUser.following.push(userId);
-    await currentUser.save();
-
-    // Add to followers list of target user
-    userToFollow.followers.push(currentUserId);
-    await userToFollow.save();
-
-    res.json({
-      message: "Successfully followed user",
-      following: currentUser.following.length,
-      followers: userToFollow.followers.length
-    });
-  } catch (error) {
-    console.error("❌ Follow user error:", error.stack);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-// @desc    Unfollow a user
-// @route   DELETE /api/auth/unfollow/:userId
-// @access  Private
-export const unfollowUser = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const currentUserId = req.user.id;
-
-    const userToUnfollow = await User.findById(userId);
-    const currentUser = await User.findById(currentUserId);
-
-    if (!userToUnfollow) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Remove from following list of current user
-    currentUser.following = currentUser.following.filter(id => id.toString() !== userId);
-    await currentUser.save();
-
-    // Remove from followers list of target user
-    userToUnfollow.followers = userToUnfollow.followers.filter(id => id.toString() !== currentUserId);
-    await userToUnfollow.save();
-
-    res.json({
-      message: "Successfully unfollowed user",
-      following: currentUser.following.length,
-      followers: userToUnfollow.followers.length
-    });
-  } catch (error) {
-    console.error("❌ Unfollow user error:", error.stack);
-    res.status(500).json({ message: "Server error" });
-  }
-};
 
 // @desc    Get user's connections (followers and following)
 // @route   GET /api/auth/connections
@@ -543,18 +471,19 @@ export const removeConnection = async (req, res) => {
 export const getUsersForDiscovery = async (req, res) => {
   try {
     const currentUserId = req.user ? req.user.id : null;
-    const { search, role, limit = 20 } = req.query;
+    const { search, limit = 20 } = req.query;
 
     let query = {};
 
     // Exclude current user if authenticated
     if (currentUserId) {
       query._id = { $ne: currentUserId };
-    }
 
-    // Filter by role if specified
-    if (role && role !== 'all') {
-      query.role = role;
+      // Get current user's role and filter by same role
+      const currentUser = await User.findById(currentUserId);
+      if (currentUser && currentUser.role !== 'admin') {
+        query.role = currentUser.role;
+      }
     }
 
     // Search by name or username if search term provided
@@ -586,8 +515,7 @@ export const getUsersForDiscovery = async (req, res) => {
 
         return {
           ...user.toObject(),
-          connectionStatus,
-          isFollowing: currentUser.following.includes(user._id)
+          connectionStatus
         };
       });
     }
@@ -601,5 +529,3 @@ export const getUsersForDiscovery = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-=======
->>>>>>> 746cdbec88b25341f99baffe05720d1fc2a0d97d
