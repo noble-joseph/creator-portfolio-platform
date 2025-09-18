@@ -163,3 +163,11 @@ sessions/
 
 # Upload directories
 uploads/
+
+.env
+
+
+
+**/.env
+
+**/.env.*.local
