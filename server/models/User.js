@@ -67,6 +67,14 @@ const userSchema = new mongoose.Schema(
         return this.googleId ? "musician" : undefined; // Default role for OAuth users
       },
     },
+    experienceLevel: {
+      type: String,
+      enum: {
+        values: ["beginner", "intermediate", "professional"],
+        message: "Experience level must be beginner, intermediate, or professional",
+      },
+      default: "beginner",
+    },
     specialization: {
       type: String,
       required: function() {
@@ -135,6 +143,14 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
     }],
+    resetPasswordToken: {
+      type: String,
+      default: null,
+    },
+    resetPasswordExpires: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

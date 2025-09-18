@@ -1,20 +1,16 @@
 import multer from 'multer';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import cloudinary from '../config/cloudnary.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Storage configuration for local uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../uploads'));
+// Cloudinary storage configuration
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'creator-portfolio', // Cloudinary folder name
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'avi', 'mov', 'mp3', 'wav', 'pdf', 'doc', 'docx'],
+    transformation: [{ width: 1000, height: 1000, crop: 'limit' }], // Optional: resize images
   },
-  filename: (req, file, cb) => {
-    // Generate unique filename with timestamp
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
 });
 
 // File filter for different types

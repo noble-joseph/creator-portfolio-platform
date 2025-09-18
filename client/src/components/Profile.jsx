@@ -307,7 +307,7 @@ const Profile = () => {
               <label className="block text-gray-300 mb-2 font-medium">Profile Photo</label>
               {profilePhoto && (
                 <div className="mb-3">
-                  <img src={`${API_BASE}/uploads/${profilePhoto}`} alt="Profile" className="w-24 h-24 rounded-full object-cover border-2 border-purple-400" />
+                  <img src={profilePhoto} alt="Profile" className="w-24 h-24 rounded-full object-cover border-2 border-purple-400" />
                 </div>
               )}
               <input

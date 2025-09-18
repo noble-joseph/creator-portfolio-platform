@@ -18,11 +18,13 @@ export const registerUser = async (req, res) => {
 
     const emailExists = await User.findOne({ email });
     if (emailExists) {
+      console.log(`Registration failed: Email ${email} already in use from IP ${req.ip}`);
       return res.status(400).json({ message: "Email already in use" });
     }
 
     const usernameExists = await User.findOne({ username });
     if (usernameExists) {
+      console.log(`Registration failed: Username ${username} already taken from IP ${req.ip}`);
       return res.status(400).json({ message: "Username already taken" });
     }
 
@@ -80,6 +82,7 @@ export const loginUser = async (req, res) => {
         refreshToken: generateRefreshToken(user._id),
       });
     } else {
+      console.log(`Login failed: Invalid credentials for email ${email} from IP ${req.ip}`);
       res.status(401).json({ message: "Invalid email or password" });
     }
   } catch (error) {
@@ -157,7 +160,7 @@ export const updateProfilePicture = async (req, res) => {
     const userId = req.user.id;
 
     // Handle file upload
-    const profilePhoto = req.file ? req.file.filename : "";
+    const profilePhoto = req.file ? req.file.path : "";
 
     const user = await User.findByIdAndUpdate(
       userId,
@@ -255,6 +258,7 @@ export const getUserProfile = async (req, res) => {
         name: user.name,
         username: user.username,
         role: user.role,
+        experienceLevel: user.experienceLevel,
         specialization: user.specialization,
         specializationDetails: user.specializationDetails,
         experiences: user.experiences,
@@ -526,6 +530,82 @@ export const getUsersForDiscovery = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Get users for discovery error:", error.stack);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// @desc    Request password reset
+// @route   POST /api/auth/forgot-password
+// @access  Public
+export const requestPasswordReset = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+      // Don't reveal if email exists or not for security
+      return res.json({ message: "If an account with that email exists, a password reset link has been sent." });
+    }
+
+    // Generate reset token
+    const crypto = await import('crypto');
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    // Set token and expiry (1 hour)
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    await user.save();
+
+    // For development, log the reset link (in production, send email)
+    const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
+    console.log(`🔗 Password reset link for ${email}: ${resetUrl}`);
+
+    res.json({ message: "If an account with that email exists, a password reset link has been sent." });
+  } catch (error) {
+    console.error("❌ Request password reset error:", error.stack);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// @desc    Reset password
+// @route   POST /api/auth/reset-password
+// @access  Public
+export const resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res.status(400).json({ message: "Token and password are required" });
+    }
+
+    // Validate password strength
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(password)) {
+      return res.status(400).json({ message: "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character." });
+    }
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired reset token" });
+    }
+
+    // Update password
+    user.password = password;
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+    await user.save();
+
+    res.json({ message: "Password has been reset successfully" });
+  } catch (error) {
+    console.error("❌ Reset password error:", error.stack);
     res.status(500).json({ message: "Server error" });
   }
 };

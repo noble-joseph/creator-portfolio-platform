@@ -12,11 +12,31 @@ export const getCreatorProfile = (req, res) => {
 // Portfolio controller functions
 export const createPortfolio = async (req, res) => {
   try {
-    const { title, description, link, category, tags, privacy } = req.body;
+    const { title, description, link, category, tags, privacy, mediaFiles } = req.body;
 
     // Handle file uploads
-    const thumbnail = req.files?.thumbnail ? req.files.thumbnail[0].filename : req.body.thumbnail || "";
-    const mediaFiles = req.files?.mediaFiles ? req.files.mediaFiles.map(file => file.filename) : [];
+    const thumbnail = req.files?.thumbnail ? req.files.thumbnail[0].path : req.body.thumbnail || "";
+
+    // Process mediaFiles - can be from form data or JSON
+    let processedMediaFiles = [];
+    if (mediaFiles && Array.isArray(mediaFiles)) {
+      processedMediaFiles = mediaFiles.map(file => ({
+        type: file.type || 'image',
+        url: file.url || (req.files?.mediaFiles ? req.files.mediaFiles.find(f => f.originalname === file.filename)?.path : file.filename) || '',
+        filename: file.filename || '',
+        metadata: file.metadata || {}
+      }));
+    } else if (req.files?.mediaFiles) {
+      processedMediaFiles = req.files.mediaFiles.map(file => ({
+        type: 'image', // Default to image, can be updated later
+        url: file.path,
+        filename: file.filename,
+        metadata: {
+          size: file.size,
+          format: file.mimetype
+        }
+      }));
+    }
 
     const portfolio = new Portfolio({
       user: req.user._id,
@@ -27,7 +47,7 @@ export const createPortfolio = async (req, res) => {
       tags: tags ? tags.split(",").map(tag => tag.trim()) : [],
       privacy: privacy || "private",
       thumbnail,
-      mediaFiles,
+      mediaFiles: processedMediaFiles,
     });
 
     const savedPortfolio = await portfolio.save();
@@ -110,7 +130,7 @@ export const getLatestPortfolios = async (req, res) => {
 export const updatePortfolio = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, link, category, tags, privacy } = req.body;
+    const { title, description, link, category, tags, privacy, mediaFiles } = req.body;
 
     const portfolio = await Portfolio.findOne({ _id: id, user: req.user._id });
 
@@ -119,8 +139,28 @@ export const updatePortfolio = async (req, res) => {
     }
 
     // Handle file uploads
-    const thumbnail = req.files?.thumbnail ? req.files.thumbnail[0].filename : req.body.thumbnail || portfolio.thumbnail;
-    const mediaFiles = req.files?.mediaFiles ? req.files.mediaFiles.map(file => file.filename) : portfolio.mediaFiles;
+    const thumbnail = req.files?.thumbnail ? req.files.thumbnail[0].path : req.body.thumbnail || portfolio.thumbnail;
+
+    // Process mediaFiles - can be from form data or JSON
+    let processedMediaFiles = portfolio.mediaFiles; // Keep existing by default
+    if (mediaFiles && Array.isArray(mediaFiles)) {
+      processedMediaFiles = mediaFiles.map(file => ({
+        type: file.type || 'image',
+        url: file.url || (req.files?.mediaFiles ? req.files.mediaFiles.find(f => f.originalname === file.filename)?.path : file.filename) || '',
+        filename: file.filename || '',
+        metadata: file.metadata || {}
+      }));
+    } else if (req.files?.mediaFiles) {
+      processedMediaFiles = req.files.mediaFiles.map(file => ({
+        type: 'image', // Default to image, can be updated later
+        url: file.path,
+        filename: file.filename,
+        metadata: {
+          size: file.size,
+          format: file.mimetype
+        }
+      }));
+    }
 
     portfolio.title = title || portfolio.title;
     portfolio.description = description || portfolio.description;
@@ -129,7 +169,7 @@ export const updatePortfolio = async (req, res) => {
     portfolio.tags = tags ? tags.split(",").map(tag => tag.trim()) : portfolio.tags;
     portfolio.privacy = privacy || portfolio.privacy;
     portfolio.thumbnail = thumbnail;
-    portfolio.mediaFiles = mediaFiles;
+    portfolio.mediaFiles = processedMediaFiles;
 
     const updatedPortfolio = await portfolio.save();
     await updatedPortfolio.populate("user", "name username");

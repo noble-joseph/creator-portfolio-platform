@@ -55,8 +55,25 @@ const portfolioSchema = new mongoose.Schema(
       trim: true,
     },
     mediaFiles: [{
-      type: String,
-      trim: true,
+      type: {
+        type: String,
+        enum: ['image', 'video', 'audio', 'document'],
+        required: true,
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      filename: {
+        type: String,
+        trim: true,
+      },
+      metadata: {
+        duration: Number, // for audio/video
+        size: Number, // file size in bytes
+        format: String, // file format
+      },
     }],
   },
   { timestamps: true }

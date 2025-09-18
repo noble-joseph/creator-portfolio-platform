@@ -1,13 +1,17 @@
 import express from "express";
 import passport from "../config/passport.js";
-import { registerUser, loginUser, refreshAccessToken, updateProfile, updateProfilePicture, getCurrentUser, getUserProfile, googleCallback, followUser, unfollowUser, getConnections, sendConnectionRequest, acceptConnectionRequest, declineConnectionRequest, removeConnection, getUsersForDiscovery } from "../controllers/authController.js";
+import { registerUser, loginUser, refreshAccessToken, updateProfile, updateProfilePicture, getCurrentUser, getUserProfile, googleCallback, getConnections, sendConnectionRequest, acceptConnectionRequest, declineConnectionRequest, removeConnection, getUsersForDiscovery, requestPasswordReset, resetPassword } from "../controllers/authController.js";
 import protect from "../middleware/authMiddleware.js";
 import { uploadProfilePhoto } from "../middleware/uploadMiddleware.js";
+import { authRateLimiter } from "../middleware/rateLimitMiddleware.js";
+import { sanitizeAuthInput } from "../middleware/sanitizeMiddleware.js";
 
 const router = express.Router();
 
-router.post("/register", registerUser);
-router.post("/login", loginUser);
+router.post("/register", authRateLimiter, sanitizeAuthInput, registerUser);
+router.post("/login", authRateLimiter, sanitizeAuthInput, loginUser);
+router.post("/forgot-password", authRateLimiter, sanitizeAuthInput, requestPasswordReset);
+router.post("/reset-password", authRateLimiter, sanitizeAuthInput, resetPassword);
 router.post("/refresh", refreshAccessToken);
 router.post("/updateProfile", protect, updateProfile);
 router.post("/updateProfilePicture", protect, uploadProfilePhoto, updateProfilePicture);

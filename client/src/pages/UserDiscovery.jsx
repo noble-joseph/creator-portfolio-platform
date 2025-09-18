@@ -82,7 +82,7 @@ export default function UserDiscovery() {
                 <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
                   {user.profilePhoto ? (
                     <img
-                      src={user.profilePhoto.startsWith("http") ? user.profilePhoto : `${API_BASE}/uploads/${user.profilePhoto}`}
+                      src={user.profilePhoto}
                       alt="Profile"
                       className="w-full h-full object-cover"
                     />

@@ -17,6 +17,9 @@ export default function Register() {
   const [specialization, setSpecialization] = useState("");
   const [specializationDetails, setSpecializationDetails] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [usernameError, setUsernameError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,7 +30,53 @@ export default function Register() {
   
 
 
-  const isValidUsername = (u) => /^[a-zA-Z0-9_]{3,20}$/.test(u);
+  const isValidUsername = (u) => {
+    // Stricter: 3-20 chars, lowercase letters/numbers/underscores, no leading/trailing spaces or underscores
+    const trimmed = u.trim();
+    if (trimmed !== u) return false; // No leading/trailing spaces
+    if (!/^[a-z0-9_]{3,20}$/.test(trimmed)) return false;
+    if (trimmed.startsWith('_') || trimmed.endsWith('_')) return false; // No leading/trailing underscores
+    if (/__/.test(trimmed)) return false; // No consecutive underscores
+    return true;
+  };
+
+  // Instant validation handlers
+  const handleUsernameChange = (e) => {
+    const val = e.target.value;
+    setUsername(val);
+    if (!isValidUsername(val)) {
+      setUsernameError("Username must be 3–20 chars, lowercase letters, numbers, underscores only. No leading/trailing underscores or spaces.");
+    } else {
+      setUsernameError("");
+    }
+  };
+
+  const handleEmailChange = (e) => {
+    const val = e.target.value;
+    setEmail(val);
+    if (!isValidEmail(val)) {
+      setEmailError("Please enter a valid email address.");
+    } else {
+      setEmailError("");
+    }
+  };
+
+  const handlePasswordChange = (e) => {
+    const val = e.target.value;
+    setPassword(val);
+    if (!isPasswordValid(val)) {
+      setPasswordError("Password must be at least 8 characters with uppercase, lowercase, number, and special character.");
+    } else {
+      setPasswordError("");
+    }
+  };
+
+  const isValidEmail = (e) => {
+    // Stricter email regex
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(e.trim());
+  };
+
   const getPasswordStrength = (pwd) => {
     if (pwd.length < 8) return "Too short";
     if (!/[A-Z]/.test(pwd)) return "Add uppercase";
@@ -36,6 +85,8 @@ export default function Register() {
     if (!/[\W_]/.test(pwd)) return "Add special character";
     return "Strong";
   };
+
+  const isPasswordValid = (pwd) => getPasswordStrength(pwd) === "Strong";
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -51,7 +102,15 @@ export default function Register() {
     }
 
     if (!isValidUsername(sanitizedUsername)) {
-      return setErrorMsg("Username must be 3–20 characters, no spaces.");
+      return setErrorMsg("Username must be 3–20 characters, lowercase letters, numbers, underscores only. No leading/trailing underscores or spaces.");
+    }
+
+    if (!isValidEmail(sanitizedEmail)) {
+      return setErrorMsg("Please enter a valid email address.");
+    }
+
+    if (!isPasswordValid(sanitizedPassword)) {
+      return setErrorMsg("Password must be at least 8 characters with uppercase, lowercase, number, and special character.");
     }
 
     try {
@@ -100,24 +159,33 @@ export default function Register() {
           placeholder="Username"
           className="px-4 py-3 rounded-lg bg-white/10 text-white border border-gray-700"
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          onChange={handleUsernameChange}
         />
+        {usernameError && (
+          <div className="text-red-400 text-xs">{usernameError}</div>
+        )}
 
         <input
           type="email"
           placeholder="Email"
           className="px-4 py-3 rounded-lg bg-white/10 text-white border border-gray-700"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={handleEmailChange}
         />
+        {emailError && (
+          <div className="text-red-400 text-xs">{emailError}</div>
+        )}
 
         <input
           type="password"
           placeholder="Password"
           className="px-4 py-3 rounded-lg bg-white/10 text-white border border-gray-700"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={handlePasswordChange}
         />
+        {passwordError && (
+          <div className="text-red-400 text-xs">{passwordError}</div>
+        )}
 
         {password && (
           <div className="text-xs text-gray-400">
@@ -126,7 +194,7 @@ export default function Register() {
         )}
 
         <select
-          className="px-4 py-3 rounded-lg bg-white/10 text-white border border-gray-700"
+          className="px-4 py-3 rounded-lg bg-white text-black border border-gray-700"
           value={specialization}
           onChange={(e) => setSpecialization(e.target.value)}
           required
