@@ -1,7 +1,7 @@
 // routes/creatorRoutes.js
 import express from "express";
 import protect from "../middleware/authMiddleware.js";
-import { uploadPortfolio } from "../middleware/uploadMiddleware.js";
+import { uploadPortfolio, uploadPortfolioMedia } from "../middleware/uploadMiddleware.js";
 import {
   getAllCreators,
   getCreatorProfile,

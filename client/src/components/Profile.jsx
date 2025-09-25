@@ -18,6 +18,8 @@ const Profile = () => {
     instagram: "",
     linkedin: "",
   });
+  const [portfolio, setPortfolio] = useState([]);
+  const [portfolioFiles, setPortfolioFiles] = useState([]);
 
   // Role-specific specializations
   const photographerSpecializations = [
@@ -74,6 +76,7 @@ const Profile = () => {
             instagram: "",
             linkedin: "",
           });
+          setPortfolio(userData.portfolio || []);
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -141,6 +144,45 @@ const Profile = () => {
     } catch (error) {
       console.error("Error uploading profile picture:", error);
       alert("Error uploading profile picture.");
+    }
+  };
+
+  const handlePortfolioFileChange = (e) => {
+    setPortfolioFiles(Array.from(e.target.files));
+  };
+
+  const handlePortfolioUpload = async () => {
+    if (portfolioFiles.length === 0) {
+      alert("Please select files first.");
+      return;
+    }
+
+    const formData = new FormData();
+    portfolioFiles.forEach(file => {
+      formData.append('portfolio', file);
+    });
+
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/uploadPortfolio`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPortfolio(data.user.portfolio);
+        setPortfolioFiles([]);
+        alert("Portfolio updated successfully!");
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to upload portfolio: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error("Error uploading portfolio:", error);
+      alert("Error uploading portfolio.");
     }
   };
 

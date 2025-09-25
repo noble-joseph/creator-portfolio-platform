@@ -10,6 +10,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [userData, setUserData] = useState(null);
   const [portfolio, setPortfolio] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
 
   useEffect(() => {
     // Fetch user data including specialization and profile photo
@@ -153,9 +154,35 @@ export default function Dashboard() {
           <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-green-500 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-green-500/10">
             <h2 className="text-xl font-bold mb-2 text-green-400">Analytics</h2>
             <p className="text-gray-300 mb-4">Track your portfolio performance and engagement</p>
-            <button className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors duration-300">
-              View Analytics
-            </button>
+            {analytics ? (
+              <div>
+                <p>Profile Views: {analytics.profileViews}</p>
+                <p>Connections: {analytics.connectionsCount}</p>
+                <p>Followers: {analytics.followersCount}</p>
+                <p>Following: {analytics.followingCount}</p>
+              </div>
+            ) : (
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch(`${API_BASE}/api/auth/analytics`, {
+                      headers: {
+                        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+                      },
+                    });
+                    if (response.ok) {
+                      const data = await response.json();
+                      setAnalytics(data);
+                    }
+                  } catch (error) {
+                    console.error("Failed to fetch analytics", error);
+                  }
+                }}
+                className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors duration-300"
+              >
+                Load Analytics
+              </button>
+            )}
           </div>
         </div>
 

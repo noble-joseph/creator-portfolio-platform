@@ -1,8 +1,8 @@
 import express from "express";
 import passport from "../config/passport.js";
-import { registerUser, loginUser, refreshAccessToken, updateProfile, updateProfilePicture, getCurrentUser, getUserProfile, googleCallback, getConnections, sendConnectionRequest, acceptConnectionRequest, declineConnectionRequest, removeConnection, getUsersForDiscovery, requestPasswordReset, resetPassword } from "../controllers/authController.js";
+import { registerUser, loginUser, refreshAccessToken, updateProfile, updateProfilePicture, uploadPortfolio, getCurrentUser, getUserProfile, googleCallback, getConnections, sendConnectionRequest, acceptConnectionRequest, declineConnectionRequest, removeConnection, getUsersForDiscovery, requestPasswordReset, resetPassword, getUserAnalytics } from "../controllers/authController.js";
 import protect from "../middleware/authMiddleware.js";
-import { uploadProfilePhoto } from "../middleware/uploadMiddleware.js";
+import { uploadProfilePhoto, uploadPortfolioMedia } from "../middleware/uploadMiddleware.js";
 import { authRateLimiter } from "../middleware/rateLimitMiddleware.js";
 import { sanitizeAuthInput } from "../middleware/sanitizeMiddleware.js";
 
@@ -15,9 +15,11 @@ router.post("/reset-password", authRateLimiter, sanitizeAuthInput, resetPassword
 router.post("/refresh", refreshAccessToken);
 router.post("/updateProfile", protect, updateProfile);
 router.post("/updateProfilePicture", protect, uploadProfilePhoto, updateProfilePicture);
+router.post("/uploadPortfolio", protect, uploadPortfolioMedia, uploadPortfolio);
 router.get("/me", protect, getCurrentUser); // ✅ new protected route
 router.get("/profile/:userId", getUserProfile); // Public profile access
 router.get("/discover", getUsersForDiscovery); // Public user discovery
+router.get("/analytics", protect, getUserAnalytics); // Protected analytics route
 
 // Google OAuth routes
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));

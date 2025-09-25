@@ -13,29 +13,20 @@ export const getCreatorProfile = (req, res) => {
 export const createPortfolio = async (req, res) => {
   try {
     const { title, description, link, category, tags, privacy, mediaFiles } = req.body;
-
-    // Handle file uploads
     const thumbnail = req.files?.thumbnail ? req.files.thumbnail[0].path : req.body.thumbnail || "";
 
     // Process mediaFiles - can be from form data or JSON
     let processedMediaFiles = [];
-    if (mediaFiles && Array.isArray(mediaFiles)) {
-      processedMediaFiles = mediaFiles.map(file => ({
-        type: file.type || 'image',
-        url: file.url || (req.files?.mediaFiles ? req.files.mediaFiles.find(f => f.originalname === file.filename)?.path : file.filename) || '',
-        filename: file.filename || '',
-        metadata: file.metadata || {}
-      }));
-    } else if (req.files?.mediaFiles) {
+    if (req.files?.mediaFiles) {
       processedMediaFiles = req.files.mediaFiles.map(file => ({
-        type: 'image', // Default to image, can be updated later
+        type: file.mimetype.split('/')[0],
         url: file.path,
-        filename: file.filename,
-        metadata: {
-          size: file.size,
-          format: file.mimetype
-        }
+        filename: file.originalname,
+        metadata: { size: file.size, format: file.mimetype }
       }));
+    } else if (mediaFiles && Array.isArray(mediaFiles)) {
+      // Handle case where mediaFiles are sent as JSON (e.g., for updates without new files)
+      processedMediaFiles = mediaFiles;
     }
 
     const portfolio = new Portfolio({

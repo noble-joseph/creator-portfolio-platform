@@ -233,6 +233,12 @@ export const getUserProfile = async (req, res) => {
     const portfolios = await Portfolio.find({ user: userId });
 
     if (user) {
+      // Increment profile views if viewed by someone else
+      if (currentUserId && currentUserId !== userId) {
+        user.profileViews += 1;
+        await user.save();
+      }
+
       // Check connection status
       let connectionStatus = 'none';
       if (currentUserId) {
@@ -606,6 +612,31 @@ export const resetPassword = async (req, res) => {
     res.json({ message: "Password has been reset successfully" });
   } catch (error) {
     console.error("❌ Reset password error:", error.stack);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// @desc    Get user analytics
+// @route   GET /api/auth/analytics
+// @access  Private
+export const getUserAnalytics = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({
+      profileViews: user.profileViews,
+      connectionsCount: user.connections.length,
+      followersCount: user.followers.length,
+      followingCount: user.following.length,
+    });
+  } catch (error) {
+    console.error("❌ Get user analytics error:", error.stack);
     res.status(500).json({ message: "Server error" });
   }
 };
