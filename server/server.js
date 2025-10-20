@@ -34,8 +34,16 @@ app.use(passport.session());
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Serve static files from client build
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Routes
 app.use('/api', (await import('./routes/index.js')).default);
+
+// Catch all handler: send back React's index.html file for client-side routing
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
