@@ -19,11 +19,11 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:5173", // Your local Vite dev server
-  //"https://yourfrontenddomain.com" // Your deployed frontend
-];
+  process.env.FRONTEND_URL // Your deployed frontend from env var
+].filter(Boolean); // Remove undefined values
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: process.env.FRONTEND_URL || "http://localhost:5173",
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
