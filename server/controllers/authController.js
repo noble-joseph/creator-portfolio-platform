@@ -540,6 +540,55 @@ export const getUsersForDiscovery = async (req, res) => {
   }
 };
 
+// @desc    Get users by role KNN (similar users)
+// @route   GET /api/auth/discover/knn
+// @access  Private
+export const getUsersByRoleKNN = async (req, res) => {
+  try {
+    const currentUserId = req.user.id;
+    const { limit = 20 } = req.query;
+
+    const currentUser = await User.findById(currentUserId);
+    if (!currentUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Find users with same role, exclude current user
+    const users = await User.find({
+      _id: { $ne: currentUserId },
+      role: currentUser.role
+    })
+      .select('name username role specialization profilePhoto bio')
+      .limit(parseInt(limit))
+      .sort({ createdAt: -1 });
+
+    // Add connection status
+    const usersWithStatus = users.map(user => {
+      let connectionStatus = 'none';
+      if (currentUser.connections && currentUser.connections.includes(user._id)) {
+        connectionStatus = 'connected';
+      } else if (user.connectionRequests && user.connectionRequests.includes(currentUserId)) {
+        connectionStatus = 'request_sent';
+      } else if (currentUser.connectionRequests && currentUser.connectionRequests.includes(user._id)) {
+        connectionStatus = 'request_received';
+      }
+
+      return {
+        ...user.toObject(),
+        connectionStatus
+      };
+    });
+
+    res.json({
+      users: usersWithStatus,
+      total: usersWithStatus.length
+    });
+  } catch (error) {
+    console.error("❌ Get users by role KNN error:", error.stack);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // @desc    Request password reset
 // @route   POST /api/auth/forgot-password
 // @access  Public

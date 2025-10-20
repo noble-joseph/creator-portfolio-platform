@@ -7,6 +7,7 @@ export default function UserDiscovery() {
   const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState("search"); // "search" or "knn"
 
   const fetchUsers = async (query) => {
     setLoading(true);
@@ -27,9 +28,32 @@ export default function UserDiscovery() {
     }
   };
 
+  const fetchKNNUsers = async () => {
+    setLoading(true);
+    setMode("knn");
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/discover/knn`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.users || []);
+      } else {
+        console.error("Failed to fetch similar users: HTTP status", response.status);
+      }
+    } catch (error) {
+      console.error("Failed to fetch similar users", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
+    setMode("search");
     if (value.length >= 3) {
       fetchUsers(value);
     } else {
@@ -71,6 +95,16 @@ export default function UserDiscovery() {
           onChange={handleSearchChange}
           className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 mb-6 text-white"
         />
+        {searchTerm === "" && (
+          <div className="text-center mb-6">
+            <button
+              onClick={fetchKNNUsers}
+              className="px-6 py-3 bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors text-white font-semibold"
+            >
+              Discover Similar Users
+            </button>
+          </div>
+        )}
         {loading && <p>Loading...</p>}
         {!loading && users.length === 0 && searchTerm.length >= 3 && (
           <p className="text-gray-400">No users found.</p>

@@ -1,17 +1,9 @@
-# TODO: Implement Forget Password Feature
-
-## Backend Changes
-- [x] Update User model to add resetPasswordToken and resetPasswordExpires fields
-- [x] Add requestPasswordReset function in authController.js
-- [x] Add resetPassword function in authController.js
-- [x] Add /forgot-password and /reset-password routes in authRoutes.js
-
-## Frontend Changes
-- [x] Add "Forgot Password" link to Login.jsx
-- [x] Create ForgotPassword.jsx page
-- [x] Create ResetPassword.jsx page
-- [x] Update App.jsx to add routes for new pages
-
-## Testing
-- [x] Test password reset flow
-- [x] Verify error handling and validation
+- [x] Add getUsersByRoleKNN function in server/controllers/authController.js
+- [x] Add /api/auth/discover/knn route in server/routes/authRoutes.js
+- [x] Update client/src/pages/UserDiscovery.jsx to show "Discover Similar Users" button when search is empty
+- [x] Implement fetch logic for KNN in UserDiscovery.jsx
+- [x] Validate the KNN Feature
+  - [x] Start server and client
+  - [x] Create diverse test profiles (5-10 users with different roles, specializations)
+  - [x] Test relevance: Log in as rock guitarist, check KNN recommendations
+  - [x] Test edge cases: New user with empty portfolio, few users
