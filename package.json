@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "build": "npm run build --prefix client"
+  },
   "dependencies": {
     "react-icons": "^5.5.0"
   }
