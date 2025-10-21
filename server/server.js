@@ -42,7 +42,11 @@ app.use('/api', (await import('./routes/index.js')).default);
 
 // Catch all handler: send back React's index.html file for client-side routing
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'), (err) => {
+    if (err) {
+      res.status(500).send('Error loading the page');
+    }
+  });
 });
 
 const PORT = process.env.PORT || 5000;

@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon server.js",
-    "build": "cd ../client && npm install && npm run build && cp -r dist ../server/public",
+    "build": "npm install && cd ../client && npm install && npm run build && cp -r dist ../server/public",
     "start": "node server.js"
   },
   "keywords": [],
@@ -17,7 +17,7 @@
     "cloudinary": "^1.41.3",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
-    "express": "^5.1.0",
+    "express": "^4.21.2",
     "express-rate-limit": "^8.1.0",
     "express-session": "^1.18.2",
     "jsonwebtoken": "^9.0.2",

@@ -1,6 +1,7 @@
 import express from "express";
 import passport from "../config/passport.js";
 import { registerUser, loginUser, refreshAccessToken, updateProfile, updateProfilePicture, getCurrentUser, getUserProfile, googleCallback, getConnections, sendConnectionRequest, acceptConnectionRequest, declineConnectionRequest, removeConnection, getUsersForDiscovery, requestPasswordReset, resetPassword } from "../controllers/authController.js";
+import { uploadPortfolio } from "../middleware/uploadMiddleware.js";
 import protect from "../middleware/authMiddleware.js";
 import { uploadProfilePhoto, uploadPortfolioMedia } from "../middleware/uploadMiddleware.js";
 import { authRateLimiter } from "../middleware/rateLimitMiddleware.js";
