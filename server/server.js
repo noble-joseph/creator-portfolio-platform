@@ -19,7 +19,33 @@ connectDB();
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:5175',
+      'http://localhost:5176'
+    ];
+
+    // In production, allow the deployed frontend URL
+    if (process.env.NODE_ENV === 'production') {
+      allowedOrigins.push(process.env.FRONTEND_URL);
+      // Allow any subdomain of render.com for flexibility
+      if (origin && origin.includes('render.com')) {
+        return callback(null, true);
+      }
+    }
+
+    if (allowedOrigins.includes(origin) || process.env.FRONTEND_URL === origin) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
 app.use(express.json());
