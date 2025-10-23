@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "npm run build --prefix server"
+    "build": "cd client && npm install && npm run build"
   },
   "dependencies": {
     "react-icons": "^5.5.0"
