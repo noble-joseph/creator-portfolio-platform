@@ -35,7 +35,7 @@ export default function Login() {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:5000'}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: sanitizedEmail, password: sanitizedPassword }),
@@ -55,7 +55,7 @@ export default function Login() {
   };
 
   const handleGoogleSignIn = () => {
-    window.location.href = "http://localhost:5000/api/auth/google";
+    window.location.href = `${import.meta.env.VITE_API_BASE || 'http://localhost:5000'}/api/auth/google`;
   };
 
   return (
