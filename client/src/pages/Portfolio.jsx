@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { API_BASE } from "../config";
 import Navbar from "../components/Navbar";
+import AudioPlayer from "../components/AudioPlayer";
 
 export default function Portfolio() {
   const [portfolios, setPortfolios] = useState([]);
@@ -16,6 +17,7 @@ export default function Portfolio() {
   const [mediaFiles, setMediaFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
+  const [playingAudio, setPlayingAudio] = useState(null);
 
   const fetchPortfolios = async () => {
     try {
@@ -298,6 +300,23 @@ export default function Portfolio() {
               <p className="mb-2 text-sm text-gray-400">Tags: {item.tags.join(", ")}</p>
               <p className="mb-2 text-sm text-gray-400">Privacy: {item.privacy}</p>
               <div className="flex space-x-2">
+                {item.mediaFiles?.find(m => m.type === 'audio') && (
+                  <button
+                    onClick={() => {
+                      const audioFile = item.mediaFiles.find(m => m.type === 'audio');
+                      if (audioFile) {
+                        if (playingAudio === item._id) {
+                          setPlayingAudio(null);
+                        } else {
+                          setPlayingAudio(item._id);
+                        }
+                      }
+                    }}
+                    className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm"
+                  >
+                    {playingAudio === item._id ? '⏸️' : '▶️'}
+                  </button>
+                )}
                 <button
                   onClick={() => handleEdit(item)}
                   className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm"
@@ -314,6 +333,31 @@ export default function Portfolio() {
             </div>
           ))}
         </div>
+
+        {/* Audio Player Modal */}
+        {playingAudio && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+              {(() => {
+                const item = portfolios.find(p => p._id === playingAudio);
+                const audioFile = item?.mediaFiles?.find(m => m.type === 'audio');
+                return audioFile ? (
+                  <AudioPlayer
+                    src={audioFile.url.startsWith('http') ? audioFile.url : `${API_BASE}/uploads/${audioFile.url}`}
+                    title={item.title}
+                    onEnded={() => setPlayingAudio(null)}
+                  />
+                ) : null;
+              })()}
+              <button
+                onClick={() => setPlayingAudio(null)}
+                className="mt-4 w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white transition-colors"
+              >
+                Close Player
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

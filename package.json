@@ -1,8 +1,63 @@
 {
+  "name": "creator-portfolio-platform",
+  "version": "1.0.0",
+  "description": "A comprehensive MERN-based platform for musicians, cinematographers, and models to showcase portfolios, connect with other creators, and build professional networks.",
+  "main": "server/index.js",
   "scripts": {
-    "build": "cd client && npm install && npm run build"
+    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "server:dev": "cd server && npm run dev",
+    "client:dev": "cd client && npm run dev",
+    "build": "npm run client:build && npm run server:build",
+    "client:build": "cd client && npm install && npm run build",
+    "server:build": "cd server && npm install",
+    "start": "cd server && npm start",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
+    "test": "npm run test:server && npm run test:client",
+    "test:server": "cd server && npm test",
+    "test:client": "cd client && npm test",
+    "lint": "npm run lint:server && npm run lint:client",
+    "lint:server": "cd server && npm run lint",
+    "lint:client": "cd client && npm run lint",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
+    "clean": "rm -rf node_modules server/node_modules client/node_modules client/dist",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down"
+  },
+  "keywords": [
+    "portfolio",
+    "creators",
+    "musicians",
+    "photographers",
+    "models",
+    "mern",
+    "react",
+    "nodejs",
+    "mongodb",
+    "express"
+  ],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/creator-portfolio-platform.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/creator-portfolio-platform/issues"
+  },
+  "homepage": "https://github.com/yourusername/creator-portfolio-platform#readme",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "prettier": "^3.1.1"
   },
   "dependencies": {
-    "react-icons": "^5.5.0"
+    "connect-redis": "^9.0.0",
+    "express-session": "^1.18.2",
+    "react-icons": "^5.5.0",
+    "redis": "^5.9.0"
   }
 }

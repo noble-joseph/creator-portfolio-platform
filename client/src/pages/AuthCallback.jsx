@@ -21,8 +21,11 @@ export default function AuthCallback() {
   }, [location, login, navigate]);
 
   return (
-    <div className="flex justify-center items-center h-screen">
-      <p>Signing you in...</p>
+    <div className="flex justify-center items-center h-screen bg-gray-900 text-white">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+        <p className="text-xl">Signing you in...</p>
+      </div>
     </div>
   );
 }

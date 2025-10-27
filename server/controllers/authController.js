@@ -10,7 +10,8 @@ const allowedRoles = ["musician", "photographer", "admin"];
 // @access  Public
 export const registerUser = async (req, res) => {
   try {
-    const { name, username, email, password, role, specialization, specializationDetails, experiences, skills, bio } = req.body;
+    console.log('req.body:', req.body);
+    const { name, username, email, password, role, specialization, specializationDetails, experiences, skills, bio, genre, style } = req.body;
 
     if (!allowedRoles.includes(role)) {
       return res.status(400).json({ message: "Invalid role. Must be musician or photographer." });
@@ -28,7 +29,7 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ message: "Username already taken" });
     }
 
-    const user = await User.create({ name, username, email, password, role, specialization, specializationDetails, experiences, skills, bio });
+    const user = await User.create({ name, username, email, password, role, specialization, specializationDetails, experiences, skills, bio, genre, style });
 
     if (user) {
       res.status(201).json({
@@ -69,6 +70,7 @@ export const loginUser = async (req, res) => {
 
     if (user && (await user.matchPassword(password))) {
       res.json({
+        message: "Login successful",
         user: {
           _id: user._id,
           name: user.name,
@@ -78,7 +80,7 @@ export const loginUser = async (req, res) => {
           specialization: user.specialization,
           specializationDetails: user.specializationDetails,
         },
-        accessToken: generateAccessToken(user._id),
+        token: generateAccessToken(user._id),
         refreshToken: generateRefreshToken(user._id),
       });
     } else {
@@ -103,6 +105,15 @@ export const refreshAccessToken = async (req, res) => {
 
   try {
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+
+    // Check if refresh token is blacklisted (stored in Redis)
+    const redisClient = (await import('../config/redis.js')).default;
+    const isBlacklisted = await redisClient.get(`blacklist:${refreshToken}`);
+
+    if (isBlacklisted) {
+      return res.status(403).json({ message: "Refresh token has been revoked" });
+    }
+
     const accessToken = generateAccessToken(decoded.id);
 
     res.json({ accessToken });
@@ -661,6 +672,39 @@ export const resetPassword = async (req, res) => {
     res.json({ message: "Password has been reset successfully" });
   } catch (error) {
     console.error("❌ Reset password error:", error.stack);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// @desc    Logout user
+// @route   POST /api/auth/logout
+// @access  Private
+export const logoutUser = async (req, res) => {
+  try {
+    const refreshToken = req.body.refreshToken;
+
+    if (refreshToken) {
+      // Blacklist the refresh token in Redis
+      const redisClient = (await import('../config/redis.js')).default;
+      const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+
+      // Set blacklist with expiration matching refresh token expiry
+      const expiry = decoded.exp - Math.floor(Date.now() / 1000);
+      await redisClient.setex(`blacklist:${refreshToken}`, expiry, 'true');
+    }
+
+    // Destroy session
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Session destruction error:', err);
+        return res.status(500).json({ message: 'Logout failed' });
+      }
+
+      res.clearCookie('connect.sid');
+      res.json({ message: 'Logged out successfully' });
+    });
+  } catch (error) {
+    console.error("❌ Logout error:", error.stack);
     res.status(500).json({ message: "Server error" });
   }
 };

@@ -6,6 +6,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import createSessionConfig from './config/session.js';
+import redisClient from './config/redis.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,6 +18,8 @@ const app = express();
 
 // Connect DB
 connectDB();
+
+// Redis will connect lazily when needed (optional for session store)
 
 // Middleware
 app.use(cors({
@@ -49,11 +53,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key',
-  resave: false,
-  saveUninitialized: false
-}));
+app.use(session(createSessionConfig(redisClient)));
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -64,7 +64,8 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
-app.use('/api', (await import('./routes/index.js')).default);
+const routes = await import('./routes/index.js');
+app.use('/api', routes.default);
 
 // Catch all handler: send back React's index.html file for client-side routing
 app.get('*', (req, res) => {

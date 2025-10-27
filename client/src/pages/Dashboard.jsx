@@ -3,6 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
 import Navbar from "../components/Navbar";
 import Profile from "../components/Profile";
+import {
+  PortfolioStatsWidget,
+  RecentActivityWidget,
+  ConnectionRequestsWidget,
+  QuickActionsWidget
+} from "../components/DashboardWidget";
 
 // src/pages/Dashboard.jsx
 
@@ -13,25 +19,43 @@ export default function Dashboard() {
   const [analytics, setAnalytics] = useState(null);
 
   useEffect(() => {
-    // Fetch user data including specialization and profile photo
-    fetch(`${API_BASE}/api/auth/me`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => setUserData(data))
-      .catch((err) => console.error("Failed to fetch user data", err));
+    const fetchData = async () => {
+      try {
+        // Fetch user data including specialization and profile photo
+        const userResponse = await fetch(`${API_BASE}/api/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        });
 
-    // Fetch portfolio data (latest 3 works)
-    fetch(`${API_BASE}/api/portfolio/latest?limit=3`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => setPortfolio(data))
-      .catch((err) => console.error("Failed to fetch portfolio", err));
+        if (userResponse.status === 401) {
+          // Token expired, redirect to login
+          window.location.href = "/login";
+          return;
+        }
+
+        if (userResponse.ok) {
+          const data = await userResponse.json();
+          setUserData(data);
+        }
+
+        // Fetch portfolio data (latest 3 works)
+        const portfolioResponse = await fetch(`${API_BASE}/api/portfolio/latest?limit=3`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        });
+
+        if (portfolioResponse.ok) {
+          const data = await portfolioResponse.json();
+          setPortfolio(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch data", err);
+      }
+    };
+
+    fetchData();
   }, []);
 
   return (
@@ -136,55 +160,66 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Connections and Analytics Section */}
-        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-          {/* Connections Card */}
-          <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-blue-500 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/10">
-            <h2 className="text-xl font-bold mb-2 text-blue-400">Connections</h2>
-            <p className="text-gray-300 mb-4">Connect with other creators and collaborators</p>
-            <button
-              onClick={() => navigate("/connections")}
-              className="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors duration-300"
-            >
-              View Connections
-            </button>
-          </div>
-
-          {/* Analytics Card */}
-          <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-green-500 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-green-500/10">
-            <h2 className="text-xl font-bold mb-2 text-green-400">Analytics</h2>
-            <p className="text-gray-300 mb-4">Track your portfolio performance and engagement</p>
-            {analytics ? (
-              <div>
-                <p>Profile Views: {analytics.profileViews}</p>
-                <p>Connections: {analytics.connectionsCount}</p>
-                <p>Followers: {analytics.followersCount}</p>
-                <p>Following: {analytics.followingCount}</p>
+        {/* Dashboard Widgets Section */}
+        {userData && (
+          <div className="max-w-6xl mx-auto mb-12">
+            <h2 className="text-2xl font-bold mb-6 text-purple-400">Dashboard Overview</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              <PortfolioStatsWidget userId={userData._id} />
+              <ConnectionRequestsWidget userId={userData._id} />
+              <RecentActivityWidget userId={userData._id} />
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <QuickActionsWidget navigate={navigate} />
+              {/* Analytics Card */}
+              <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-green-500 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-green-500/10">
+                <h3 className="text-xl font-bold mb-2 text-green-400">Analytics</h3>
+                <p className="text-gray-300 mb-4">Track your portfolio performance and engagement</p>
+                {analytics ? (
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-300">Profile Views:</span>
+                      <span className="text-white font-semibold">{analytics.profileViews}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300">Connections:</span>
+                      <span className="text-white font-semibold">{analytics.connectionsCount}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300">Followers:</span>
+                      <span className="text-white font-semibold">{analytics.followersCount}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300">Following:</span>
+                      <span className="text-white font-semibold">{analytics.followingCount}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(`${API_BASE}/api/auth/analytics`, {
+                          headers: {
+                            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+                          },
+                        });
+                        if (response.ok) {
+                          const data = await response.json();
+                          setAnalytics(data);
+                        }
+                      } catch (error) {
+                        console.error("Failed to fetch analytics", error);
+                      }
+                    }}
+                    className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors duration-300"
+                  >
+                    Load Analytics
+                  </button>
+                )}
               </div>
-            ) : (
-              <button
-                onClick={async () => {
-                  try {
-                    const response = await fetch(`${API_BASE}/api/auth/analytics`, {
-                      headers: {
-                        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-                      },
-                    });
-                    if (response.ok) {
-                      const data = await response.json();
-                      setAnalytics(data);
-                    }
-                  } catch (error) {
-                    console.error("Failed to fetch analytics", error);
-                  }
-                }}
-                className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors duration-300"
-              >
-                Load Analytics
-              </button>
-            )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Logout Button */}
         <div className="text-center">

@@ -7,7 +7,7 @@ export default function UserDiscovery() {
   const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState("search"); // "search" or "knn"
+  const [mode, setMode] = useState("search"); // "search" | "knn" | "nb" | "tree"
 
   const fetchUsers = async (query) => {
     setLoading(true);
@@ -32,19 +32,80 @@ export default function UserDiscovery() {
     setLoading(true);
     setMode("knn");
     try {
-      const response = await fetch(`${API_BASE}/api/auth/discover/knn`, {
+      const response = await fetch(`${API_BASE}/api/ai/discover`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
       if (response.ok) {
         const data = await response.json();
-        setUsers(data.users || []);
+        const recs = (data.recommendations || []).map(r => ({ ...r.user, reasons: r.reasons }));
+        setUsers(recs);
       } else {
         console.error("Failed to fetch similar users: HTTP status", response.status);
       }
     } catch (error) {
       console.error("Failed to fetch similar users", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchNBSuggestions = async () => {
+    setLoading(true);
+    setMode("nb");
+    try {
+      const response = await fetch(`${API_BASE}/api/ai/nb-specialization-suggestions`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const suggestions = Array.isArray(data.suggestions) ? data.suggestions : [];
+        // Flatten example users and annotate with reasons
+        const flattened = suggestions.flatMap(s =>
+          (s.examples || []).map(ex => ({
+            ...ex,
+            reasons: [`Suggested specialization: ${s.specialization}`]
+          }))
+        );
+        // Deduplicate by _id
+        const seen = new Set();
+        const unique = flattened.filter(u => {
+          if (!u._id || seen.has(u._id)) return false;
+          seen.add(u._id);
+          return true;
+        });
+        setUsers(unique);
+      } else {
+        console.error("Failed to fetch NB suggestions: HTTP status", response.status);
+      }
+    } catch (error) {
+      console.error("Failed to fetch NB suggestions", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDTMatches = async () => {
+    setLoading(true);
+    setMode("tree");
+    try {
+      const response = await fetch(`${API_BASE}/api/ai/decision-tree-matches`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const matches = (data.matches || []).map(m => ({ ...m.user, reasons: m.reasons }));
+        setUsers(matches);
+      } else {
+        console.error("Failed to fetch Decision Tree matches: HTTP status", response.status);
+      }
+    } catch (error) {
+      console.error("Failed to fetch Decision Tree matches", error);
     } finally {
       setLoading(false);
     }
@@ -103,6 +164,20 @@ export default function UserDiscovery() {
             >
               Discover Similar Users
             </button>
+            <div className="mt-3 flex items-center justify-center gap-3 flex-wrap">
+              <button
+                onClick={fetchNBSuggestions}
+                className="px-4 py-2 bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors text-white text-sm"
+              >
+                NB: Suggest Specializations
+              </button>
+              <button
+                onClick={fetchDTMatches}
+                className="px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors text-white text-sm"
+              >
+                Decision Tree Matches
+              </button>
+            </div>
           </div>
         )}
         {loading && <p>Loading...</p>}
@@ -130,6 +205,13 @@ export default function UserDiscovery() {
                   <h3 className="font-semibold text-white">{user.name}</h3>
                   <p className="text-gray-400 text-sm">@{user.username}</p>
                   <p className="text-purple-400 text-sm capitalize">{user.role}</p>
+                  {(mode === "knn" || mode === "tree" || mode === "nb") && Array.isArray(user.reasons) && user.reasons.length > 0 && (
+                    <ul className="mt-1 text-xs text-gray-400 list-disc list-inside space-y-0.5">
+                      {user.reasons.slice(0,3).map((reason, idx) => (
+                        <li key={idx}>{reason}</li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </Link>
               <button

@@ -155,6 +155,228 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    
+    // Enhanced Profile Fields
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    verificationBadges: [{
+      type: {
+        type: String,
+        enum: ['award', 'certification', 'endorsement', 'featured'],
+        required: true,
+      },
+      title: {
+        type: String,
+        required: true,
+      },
+      description: String,
+      issuedBy: String,
+      issuedDate: Date,
+      verificationUrl: String,
+    }],
+    
+    // Genre/Style for Musicians/Photographers
+    genre: {
+      type: String,
+      required: function() {
+        return this.role === 'musician';
+      },
+    },
+    style: {
+      type: String,
+      required: function() {
+        return this.role === 'photographer';
+      },
+    },
+    
+    // Location and Availability
+    location: {
+      city: String,
+      state: String,
+      country: String,
+      coordinates: {
+        lat: Number,
+        lng: Number,
+      },
+    },
+    availability: {
+      type: String,
+      enum: ['available', 'busy', 'unavailable'],
+      default: 'available',
+    },
+    hourlyRate: {
+      type: Number,
+      min: 0,
+    },
+    
+    // Portfolio and Achievements
+    achievements: [{
+      title: {
+        type: String,
+        required: true,
+      },
+      description: String,
+      date: Date,
+      category: {
+        type: String,
+        enum: ['award', 'milestone', 'project', 'recognition'],
+      },
+      image: String,
+      url: String,
+    }],
+    
+    // Testimonials
+    testimonials: [{
+      clientName: {
+        type: String,
+        required: true,
+      },
+      clientEmail: String,
+      project: String,
+      rating: {
+        type: Number,
+        min: 1,
+        max: 5,
+        required: true,
+      },
+      review: {
+        type: String,
+        required: true,
+      },
+      date: {
+        type: Date,
+        default: Date.now,
+      },
+      isVerified: {
+        type: Boolean,
+        default: false,
+      },
+    }],
+    
+    // Analytics
+    analytics: {
+      profileViews: {
+        type: Number,
+        default: 0,
+      },
+      portfolioViews: {
+        type: Number,
+        default: 0,
+      },
+      connectionRequests: {
+        type: Number,
+        default: 0,
+      },
+      lastActive: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+    
+    // Monetization
+    monetization: {
+      isBookable: {
+        type: Boolean,
+        default: false,
+      },
+      bookingSettings: {
+        minBookingHours: {
+          type: Number,
+          default: 1,
+        },
+        advanceBookingDays: {
+          type: Number,
+          default: 7,
+        },
+        cancellationPolicy: {
+          type: String,
+          enum: ['flexible', 'moderate', 'strict'],
+          default: 'moderate',
+        },
+      },
+      storefront: {
+        isActive: {
+          type: Boolean,
+          default: false,
+        },
+        products: [{
+          name: String,
+          description: String,
+          price: Number,
+          category: String,
+          image: String,
+          isDigital: Boolean,
+          downloadUrl: String,
+        }],
+      },
+    },
+    
+    // Social Features
+    socialSettings: {
+      allowPublicMessages: {
+        type: Boolean,
+        default: true,
+      },
+      allowConnectionRequests: {
+        type: Boolean,
+        default: true,
+      },
+      showOnlineStatus: {
+        type: Boolean,
+        default: true,
+      },
+    },
+    
+    // AI Collaboration Features
+    collaborationPreferences: {
+      interests: [String],
+      skills: [String],
+      projectTypes: [String],
+      availability: String,
+    },
+    
+    // Case Studies/Blog Posts
+    caseStudies: [{
+      title: {
+        type: String,
+        required: true,
+      },
+      slug: {
+        type: String,
+        required: true,
+      },
+      content: {
+        type: String,
+        required: true,
+      },
+      excerpt: String,
+      featuredImage: String,
+      tags: [String],
+      isPublished: {
+        type: Boolean,
+        default: false,
+      },
+      publishedAt: Date,
+      views: {
+        type: Number,
+        default: 0,
+      },
+    }],
+    
+    // Gig and Opportunity Preferences
+    gigPreferences: {
+      types: [String],
+      budget: {
+        min: Number,
+        max: Number,
+      },
+      location: {
+        type: String,
+        enum: ['local', 'national', 'international', 'remote'],
+      },
+    },
   },
   { timestamps: true }
 );

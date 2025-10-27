@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import apiClient from '../utils/api';
 
 export const AuthContext = createContext();
 
@@ -14,7 +15,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     // Check for existing tokens on app load
-    const storedToken = localStorage.getItem('token');
+    const storedToken = localStorage.getItem('accessToken');
     const storedRefreshToken = localStorage.getItem('refreshToken');
     if (storedToken) {
       setToken(storedToken);
@@ -22,12 +23,11 @@ export function AuthProvider({ children }) {
     if (storedRefreshToken) {
       setRefreshToken(storedRefreshToken);
     }
-    // You could fetch user data here using the token
     setLoading(false);
   }, []);
 
   const login = (newToken, newRefreshToken, userData) => {
-    localStorage.setItem('token', newToken);
+    localStorage.setItem('accessToken', newToken);
     localStorage.setItem('refreshToken', newRefreshToken);
     setToken(newToken);
     setRefreshToken(newRefreshToken);
@@ -36,12 +36,45 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
-    setToken(null);
-    setRefreshToken(null);
-    setUser(null);
+  const logout = async () => {
+    try {
+      const refreshTokenValue = localStorage.getItem('refreshToken');
+      if (refreshTokenValue) {
+        await apiClient.post('/api/auth/logout', { refreshToken: refreshTokenValue });
+      }
+    } catch (error) {
+      console.error('Logout API call failed:', error);
+    } finally {
+      // Always clear local storage and state
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      setToken(null);
+      setRefreshToken(null);
+      setUser(null);
+    }
+  };
+
+  const refreshAccessToken = async () => {
+    const refreshTokenValue = localStorage.getItem('refreshToken');
+    if (!refreshTokenValue) {
+      logout();
+      return false;
+    }
+
+    try {
+      const response = await apiClient.post('/api/auth/refresh', { refreshToken: refreshTokenValue });
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('accessToken', data.accessToken);
+        setToken(data.accessToken);
+        return true;
+      }
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+    }
+
+    logout();
+    return false;
   };
 
   const value = {
@@ -50,6 +83,7 @@ export function AuthProvider({ children }) {
     user,
     login,
     logout,
+    refreshAccessToken,
     loading
   };
 

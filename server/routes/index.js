@@ -9,6 +9,8 @@ const router = express.Router();
 router.use('/auth', authRoutes);
 router.use('/messages', messageRoutes);
 router.use('/creators', creatorRoutes);
+// Alias to support clients calling singular path
+router.use('/creator', creatorRoutes);
 router.use('/admin', adminRoutes);
 
 router.get('/', (req, res) => {

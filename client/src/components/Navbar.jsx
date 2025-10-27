@@ -20,6 +20,12 @@ export default function Navbar() {
           },
         });
 
+        if (response.status === 401) {
+          // Token might be expired, redirect to login
+          window.location.href = "/login";
+          return;
+        }
+
         if (response.ok) {
           const userData = await response.json();
           setSocialMedia(userData.socialMedia || {
