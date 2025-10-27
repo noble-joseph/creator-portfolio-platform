@@ -47,7 +47,7 @@
   },
   "homepage": "https://github.com/yourusername/creator-portfolio-platform#readme",
   "engines": {
-    "node": ">=18.0.0",
+    "node": "20.x",
     "npm": ">=8.0.0"
   },
   "devDependencies": {
