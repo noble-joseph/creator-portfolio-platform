@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaBrain, FaUsers, FaLightbulb, FaHeart, FaMessage, FaStar } from 'react-icons/fa';
+import { FaBrain, FaUsers, FaLightbulb, FaHeart, FaComment, FaStar } from 'react-icons/fa';
 import apiClient from '../utils/api';
 
 const AICollaborationMatchmaker = ({ currentUser }) => {
@@ -204,7 +204,7 @@ const AICollaborationMatchmaker = ({ currentUser }) => {
                     onClick={() => setSelectedMatch(match)}
                     className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm font-medium transition-colors flex items-center justify-center space-x-1"
                   >
-                    <FaMessage className="w-3 h-3" />
+                    <FaComment className="w-3 h-3" />
                     <span>Connect</span>
                   </button>
                   <a
