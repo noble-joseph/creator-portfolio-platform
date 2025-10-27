@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaChartLine, FaEye, FaHeart, FaUsers, FaDownload, FaTrendingUp } from 'react-icons/fa';
+import { FaChartLine, FaEye, FaHeart, FaUsers, FaDownload, FaArrowUp } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import apiClient from '../utils/api';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -127,7 +127,7 @@ const Analytics = () => {
             className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20"
           >
             <h2 className="text-xl font-bold text-white mb-6 flex items-center space-x-2">
-              <FaTrendingUp className="w-5 h-5 text-green-400" />
+              <FaArrowUp className="w-5 h-5 text-green-400" />
               <span>Profile Performance</span>
             </h2>
             
