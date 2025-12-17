@@ -247,3 +247,16 @@ coverage/
 # Misc
 *.tgz
 *.tar.gz
+
+# Redis binaries (Windows)
+redis-*.exe
+redis-*.pdb
+*.dll
+
+# Archives
+*.zip
+
+# Office documents (use README.md instead)
+*.docx
+*.xlsx
+*.pptx

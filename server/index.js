@@ -55,27 +55,56 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // CORS configuration
-const allowedOrigins = [
+const defaultAllowedOrigins = [
   "http://localhost:5173",
+  "http://127.0.0.1:5173",
   "http://localhost:3000",
-  process.env.FRONTEND_URL
-].filter(Boolean);
+  "http://127.0.0.1:3000"
+];
+
+const normalizeOrigin = (origin = "") => origin.replace(/\/$/, "");
+
+const parseOriginList = (value) =>
+  (value ? value.split(",") : [])
+    .map((origin) => normalizeOrigin(origin.trim()))
+    .filter(Boolean);
+
+const envAllowedOrigins = [
+  ...parseOriginList(process.env.FRONTEND_URL),
+  ...parseOriginList(process.env.ALLOWED_ORIGINS)
+];
+
+const allowedOrigins = Array.from(
+  new Set([
+    ...defaultAllowedOrigins.map(normalizeOrigin),
+    ...envAllowedOrigins
+  ])
+);
+
+const isDevelopment = (process.env.NODE_ENV || "development") !== "production";
+const localLoopbackRegex = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i;
 
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
+  origin(origin, callback) {
     if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+
+    const normalizedOrigin = normalizeOrigin(origin);
+
+    if (
+      allowedOrigins.includes(normalizedOrigin) ||
+      (isDevelopment && localLoopbackRegex.test(normalizedOrigin))
+    ) {
+      return callback(null, true);
     }
+
+    console.warn(`[CORS] Blocked origin: ${origin}`);
+    return callback(new Error('Not allowed by CORS'));
   },
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   credentials: true,
-  maxAge: 86400 // 24 hours
+  maxAge: 86400, // 24 hours
+  optionsSuccessStatus: 204
 }));
 
 // Body parsing middleware
@@ -142,4 +171,25 @@ app.use(notFound);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+const server = app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+// Handle port already in use error
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use. Trying alternative port...`);
+    const alternativePort = PORT + 1;
+    const newServer = app.listen(alternativePort, () => {
+      console.log(`Server running on alternative port ${alternativePort}`);
+    });
+    newServer.on('error', (newErr) => {
+      console.error('Failed to start server on alternative port:', newErr);
+      process.exit(1);
+    });
+  } else {
+    console.error('Server error:', err);
+    process.exit(1);
+  }
+});

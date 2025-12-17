@@ -18,7 +18,7 @@ const generateToken = (id) => {
 // @route   POST /api/auth/register
 // @access  Public
 router.post('/register', validateEmail, catchAsync(async (req, res) => {
-  const { name, email, username, password, role, specialization, genre } = req.body;
+  const { name, email, username, password, role, specialization } = req.body;
 
   // Check if user already exists
   const existingUser = await User.findOne({
@@ -31,17 +31,33 @@ router.post('/register', validateEmail, catchAsync(async (req, res) => {
     });
   }
 
-  // Create user
-  const user = await User.create({
+  // Validate required fields based on role
+  if (!specialization) {
+    return res.status(400).json({
+      error: 'Specialization is required'
+    });
+  }
+
+  // Prepare user data
+  const userData = {
     name,
     email,
     username,
     password,
     role,
     specialization,
-    genre,
     experienceLevel: 'beginner'
-  });
+  };
+
+  // Set genre or style based on role
+  if (role === 'musician') {
+    userData.genre = specialization;
+  } else if (role === 'photographer') {
+    userData.style = specialization;
+  }
+
+  // Create user
+  const user = await User.create(userData);
 
   // Generate token
   const token = generateToken(user._id);

@@ -5,39 +5,28 @@ const portfolioSchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
     },
     title: {
       type: String,
-      required: [true, 'Portfolio title is required'],
       trim: true,
-      maxLength: [100, 'Title cannot exceed 100 characters'],
     },
     description: {
       type: String,
-      required: [true, 'Portfolio description is required'],
       trim: true,
-      maxLength: [1000, 'Description cannot exceed 1000 characters'],
     },
     category: {
       type: String,
-      required: [true, 'Category is required'],
-      enum: ['music', 'photography', 'videography', 'design', 'writing', 'other'],
     },
     subcategory: {
       type: String,
       trim: true,
-      maxLength: [50, 'Subcategory cannot exceed 50 characters'],
     },
     mediaFiles: [{
       type: {
         type: String,
-        enum: ['image', 'video', 'audio', 'document'],
-        required: true,
       },
       url: {
         type: String,
-        required: true,
       },
       filename: String,
       size: Number,
@@ -54,17 +43,10 @@ const portfolioSchema = new mongoose.Schema(
     },
     link: {
       type: String,
-      validate: {
-        validator: function(v) {
-          return !v || /^https?:\/\/.+/.test(v);
-        },
-        message: 'Link must be a valid URL'
-      }
     },
     tags: [{
       type: String,
       trim: true,
-      maxLength: [30, 'Tag cannot exceed 30 characters'],
     }],
     isPublic: {
       type: Boolean,
@@ -86,13 +68,10 @@ const portfolioSchema = new mongoose.Schema(
       user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
       },
       content: {
         type: String,
-        required: true,
         trim: true,
-        maxLength: [500, 'Comment cannot exceed 500 characters'],
       },
       createdAt: {
         type: Date,

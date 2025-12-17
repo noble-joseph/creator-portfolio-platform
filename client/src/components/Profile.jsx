@@ -209,30 +209,48 @@ const Profile = () => {
     return <div className="text-gray-300">Loading...</div>;
   }
 
-  const currentSpecializations = userRole === "photographer"
-    ? photographerSpecializations
-    : musicianSpecializations;
+  const getTheme = (role) => {
+    if (role === 'musician') {
+      return {
+        text: 'text-wood-50',
+        accent: 'text-gold-500',
+        gradient: 'bg-gradient-to-r from-gold-500 to-gold-700',
+        border: 'focus:border-gold-500 focus:ring-gold-500/20',
+        title: 'text-gold-500'
+      };
+    }
+    return {
+      text: 'text-cinematic-50',
+      accent: 'text-cinemaAccent-500',
+      gradient: 'bg-gradient-to-r from-cinemaAccent-400 to-cinemaAccent-600',
+      border: 'focus:border-cinemaAccent-500 focus:ring-cinemaAccent-500/20',
+      title: 'text-cinemaAccent-400'
+    };
+  };
+
+  const theme = getTheme(userRole || 'musician');
+  const currentSpecializations = userRole === 'musician' ? musicianSpecializations : photographerSpecializations;
 
   return (
-    <div className="max-w-4xl mx-auto bg-gray-800 p-8 rounded-xl shadow-2xl">
-      <h2 className="text-3xl font-bold mb-8 text-purple-400 text-center">Edit Your Profile</h2>
+    <div className="max-w-4xl mx-auto">
+      <h2 className={`text-3xl font-bold mb-8 ${theme.gradient} bg-clip-text text-transparent text-center`}>Edit Your Profile</h2>
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Basic Information Section */}
-        <div className="bg-gray-700 p-6 rounded-lg">
-          <h3 className="text-xl font-semibold mb-4 text-purple-300">Basic Information</h3>
+        <div className="card p-6 border-white/10 bg-black/40">
+          <h3 className={`text-xl font-semibold mb-4 ${theme.title}`}>Basic Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-gray-300 mb-2 font-medium">Role</label>
-              <div className="p-3 bg-gray-600 text-white rounded-lg capitalize font-semibold">
+              <label className="block text-neutral-300 mb-2 font-medium">Role</label>
+              <div className="p-3 bg-white/5 text-white rounded-lg capitalize font-semibold border border-white/10">
                 {userRole}
               </div>
             </div>
             <div>
-              <label className="block text-gray-300 mb-2 font-medium">Specialization</label>
+              <label className="block text-neutral-300 mb-2 font-medium">Specialization</label>
               <select
                 value={specialization}
                 onChange={(e) => setSpecialization(e.target.value)}
-                className="w-full p-3 bg-gray-600 text-white rounded-lg border border-gray-500 focus:border-purple-400 focus:outline-none transition-colors"
+                className={`w-full p-3 bg-white/5 text-white rounded-lg border border-white/10 focus:outline-none focus:ring-2 transition-all ${theme.border}`}
                 required
               >
                 <option value="">Select your specialization</option>
@@ -245,22 +263,22 @@ const Profile = () => {
             </div>
           </div>
           <div className="mt-6">
-            <label className="block text-gray-300 mb-2 font-medium">Specialization Details</label>
+            <label className="block text-neutral-300 mb-2 font-medium">Specialization Details</label>
             <input
               type="text"
               value={specializationDetails}
               onChange={(e) => setSpecializationDetails(e.target.value)}
-              className="w-full p-3 bg-gray-600 text-white rounded-lg border border-gray-500 focus:border-purple-400 focus:outline-none transition-colors"
+              className={`w-full p-3 bg-white/5 text-white rounded-lg border border-white/10 focus:outline-none focus:ring-2 transition-all ${theme.border}`}
               placeholder="Additional details about your specialization"
             />
           </div>
         </div>
 
         {/* Experiences Section */}
-        <div className="bg-gray-700 p-6 rounded-lg">
-          <h3 className="text-xl font-semibold mb-4 text-purple-300">Experiences</h3>
+        <div className="card p-6 border-white/10 bg-black/40">
+          <h3 className={`text-xl font-semibold mb-4 ${theme.title}`}>Experiences</h3>
           {experiences.map((experience, index) => (
-            <div key={index} className="mb-6 p-4 bg-gray-600 rounded-lg border border-gray-500">
+            <div key={index} className="mb-6 p-4 bg-white/5 rounded-lg border border-white/10">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <input
                   type="text"
@@ -268,7 +286,7 @@ const Profile = () => {
                   value={experience.title}
                   onChange={(e) => handleExperienceChange(index, e)}
                   placeholder="Experience Title"
-                  className="p-3 bg-gray-500 text-white rounded-lg border border-gray-400 focus:border-purple-400 focus:outline-none transition-colors"
+                  className={`p-3 bg-black/20 text-white rounded-lg border border-white/10 focus:outline-none focus:ring-2 transition-all ${theme.border}`}
                   required
                 />
                 <input
@@ -277,7 +295,7 @@ const Profile = () => {
                   value={experience.company}
                   onChange={(e) => handleExperienceChange(index, e)}
                   placeholder="Company"
-                  className="p-3 bg-gray-500 text-white rounded-lg border border-gray-400 focus:border-purple-400 focus:outline-none transition-colors"
+                  className={`p-3 bg-black/20 text-white rounded-lg border border-white/10 focus:outline-none focus:ring-2 transition-all ${theme.border}`}
                   required
                 />
               </div>
@@ -287,7 +305,7 @@ const Profile = () => {
                 value={experience.duration}
                 onChange={(e) => handleExperienceChange(index, e)}
                 placeholder="Duration (e.g., 2020-2022)"
-                className="w-full p-3 bg-gray-500 text-white rounded-lg border border-gray-400 focus:border-purple-400 focus:outline-none transition-colors mb-4"
+                className={`w-full p-3 bg-black/20 text-white rounded-lg border border-white/10 focus:outline-none focus:ring-2 transition-all mb-4 ${theme.border}`}
                 required
               />
               <textarea
@@ -295,7 +313,7 @@ const Profile = () => {
                 value={experience.description}
                 onChange={(e) => handleExperienceChange(index, e)}
                 placeholder="Description of your role and achievements"
-                className="w-full p-3 bg-gray-500 text-white rounded-lg border border-gray-400 focus:border-purple-400 focus:outline-none transition-colors resize-none"
+                className={`w-full p-3 bg-black/20 text-white rounded-lg border border-white/10 focus:outline-none focus:ring-2 transition-all resize-none ${theme.border}`}
                 rows="3"
               />
               <button
@@ -317,24 +335,24 @@ const Profile = () => {
         </div>
 
         {/* Skills and Bio Section */}
-        <div className="bg-gray-700 p-6 rounded-lg">
-          <h3 className="text-xl font-semibold mb-4 text-purple-300">Skills & Bio</h3>
+        <div className="card p-6 border-white/10 bg-black/40">
+          <h3 className={`text-xl font-semibold mb-4 ${theme.title}`}>Skills & Bio</h3>
           <div className="mb-6">
-            <label className="block text-gray-300 mb-2 font-medium">Skills</label>
+            <label className="block text-neutral-300 mb-2 font-medium">Skills</label>
             <input
               type="text"
               value={skills.join(", ")}
               onChange={(e) => setSkills(e.target.value.split(",").map(skill => skill.trim()))}
-              className="w-full p-3 bg-gray-600 text-white rounded-lg border border-gray-500 focus:border-purple-400 focus:outline-none transition-colors"
+              className={`w-full p-3 bg-white/5 text-white rounded-lg border border-white/10 focus:outline-none focus:ring-2 transition-all ${theme.border}`}
               placeholder="Comma-separated skills (e.g., Photography, Photoshop, Lighting)"
             />
           </div>
           <div>
-            <label className="block text-gray-300 mb-2 font-medium">Bio</label>
+            <label className="block text-neutral-300 mb-2 font-medium">Bio</label>
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              className="w-full p-3 bg-gray-600 text-white rounded-lg border border-gray-500 focus:border-purple-400 focus:outline-none transition-colors resize-none"
+              className={`w-full p-3 bg-white/5 text-white rounded-lg border border-white/10 focus:outline-none focus:ring-2 transition-all resize-none ${theme.border}`}
               placeholder="Tell us about yourself, your background, and what makes you unique"
               rows="4"
             />
@@ -342,11 +360,11 @@ const Profile = () => {
         </div>
 
         {/* Photos Section */}
-        <div className="bg-gray-700 p-6 rounded-lg">
-          <h3 className="text-xl font-semibold mb-4 text-purple-300">Photos</h3>
+        <div className="card p-6 border-white/10 bg-black/40">
+          <h3 className={`text-xl font-semibold mb-4 ${theme.title}`}>Photos</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-gray-300 mb-2 font-medium">Profile Photo</label>
+              <label className="block text-neutral-300 mb-2 font-medium">Profile Photo</label>
               {profilePhoto && (
                 <div className="mb-3">
                   <img src={profilePhoto} alt="Profile" className="w-24 h-24 rounded-full object-cover border-2 border-purple-400" />
@@ -356,28 +374,28 @@ const Profile = () => {
                 type="file"
                 accept="image/*"
                 onChange={handleProfilePhotoChange}
-                className="w-full p-3 bg-gray-600 text-white rounded-lg border border-gray-500 focus:border-purple-400 focus:outline-none transition-colors mb-3"
+                className={`w-full p-3 bg-white/5 text-neutral-300 rounded-lg border border-white/10 focus:outline-none focus:ring-2 transition-all mb-3 ${theme.border}`}
               />
               <button
                 type="button"
                 onClick={handleProfilePhotoUpload}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+                className="px-6 py-2 btn btn-primary"
               >
                 Upload Profile Picture
               </button>
             </div>
             <div>
-              <label className="block text-gray-300 mb-2 font-medium">Cover Photo URL</label>
+              <label className="block text-neutral-300 mb-2 font-medium">Cover Photo URL</label>
               {coverPhoto && (
                 <div className="mb-3">
-                  <img src={coverPhoto} alt="Cover" className="w-full h-20 object-cover rounded-lg border border-gray-500" />
+                  <img src={coverPhoto} alt="Cover" className="w-full h-20 object-cover rounded-lg border border-white/20" />
                 </div>
               )}
               <input
                 type="text"
                 value={coverPhoto}
                 onChange={(e) => setCoverPhoto(e.target.value)}
-                className="w-full p-3 bg-gray-600 text-white rounded-lg border border-gray-500 focus:border-purple-400 focus:outline-none transition-colors"
+                className={`w-full p-3 bg-white/5 text-white rounded-lg border border-white/10 focus:outline-none focus:ring-2 transition-all ${theme.border}`}
                 placeholder="URL to your cover photo"
               />
             </div>
@@ -385,35 +403,35 @@ const Profile = () => {
         </div>
 
         {/* Social Media Section */}
-        <div className="bg-gray-700 p-6 rounded-lg">
-          <h3 className="text-xl font-semibold mb-4 text-purple-300">Social Media Links</h3>
+        <div className="card p-6 border-white/10 bg-black/40">
+          <h3 className={`text-xl font-semibold mb-4 ${theme.title}`}>Social Media Links</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input
               type="text"
               value={socialMedia.facebook}
               onChange={(e) => handleSocialMediaChange('facebook', e.target.value)}
-              className="p-3 bg-gray-600 text-white rounded-lg border border-gray-500 focus:border-purple-400 focus:outline-none transition-colors"
+              className={`p-3 bg-white/5 text-white rounded-lg border border-white/10 focus:outline-none focus:ring-2 transition-all ${theme.border}`}
               placeholder="Facebook profile URL"
             />
             <input
               type="text"
               value={socialMedia.twitter}
               onChange={(e) => handleSocialMediaChange('twitter', e.target.value)}
-              className="p-3 bg-gray-600 text-white rounded-lg border border-gray-500 focus:border-purple-400 focus:outline-none transition-colors"
+              className={`p-3 bg-white/5 text-white rounded-lg border border-white/10 focus:outline-none focus:ring-2 transition-all ${theme.border}`}
               placeholder="Twitter profile URL"
             />
             <input
               type="text"
               value={socialMedia.instagram}
               onChange={(e) => handleSocialMediaChange('instagram', e.target.value)}
-              className="p-3 bg-gray-600 text-white rounded-lg border border-gray-500 focus:border-purple-400 focus:outline-none transition-colors"
+              className={`p-3 bg-white/5 text-white rounded-lg border border-white/10 focus:outline-none focus:ring-2 transition-all ${theme.border}`}
               placeholder="Instagram profile URL"
             />
             <input
               type="text"
               value={socialMedia.linkedin}
               onChange={(e) => handleSocialMediaChange('linkedin', e.target.value)}
-              className="p-3 bg-gray-600 text-white rounded-lg border border-gray-500 focus:border-purple-400 focus:outline-none transition-colors"
+              className={`p-3 bg-white/5 text-white rounded-lg border border-white/10 focus:outline-none focus:ring-2 transition-all ${theme.border}`}
               placeholder="LinkedIn profile URL"
             />
           </div>
@@ -421,7 +439,7 @@ const Profile = () => {
 
         <button
           type="submit"
-          className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-semibold text-lg shadow-lg"
+          className="w-full py-4 btn btn-primary btn-lg"
         >
           Save Changes
         </button>

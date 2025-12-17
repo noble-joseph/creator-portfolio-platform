@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { API_BASE } from "../config";
 import Navbar from "../components/Navbar";
+import AudioPlayer from "../components/AudioPlayer";
 import { useAuth } from "../contexts/AuthContext";
 import MusicianProfile from "../components/MusicianProfile";
 import PhotographerProfile from "../components/PhotographerProfile";
@@ -18,9 +19,43 @@ export default function PublicProfile() {
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('appreciation');
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [debouncedMessage, setDebouncedMessage] = useState('');
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedMessage(message), 150);
+    return () => clearTimeout(id);
+  }, [message]);
+  const quality = useMemo(()=>svmMessageQuality(debouncedMessage), [debouncedMessage]);
   const [error, setError] = useState(null);
   const [showMessagePanel, setShowMessagePanel] = useState(false);
   const [showConnectCTA, setShowConnectCTA] = useState(false);
+  // --- SVM message quality helpers ---
+  const STOPWORDS = new Set(["the","a","an","and","or","but","if","in","on","at","to","for","of","with","is","it","this","that","as","by","from","be"]);
+  const tokenize = (text) => (text || "").toLowerCase().slice(0, 500).replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(t => t && !STOPWORDS.has(t));
+  const svmMessageQuality = (text) => {
+    const raw = (text || "").slice(0, 500);
+    const toks = tokenize(raw);
+    const len = raw.length;
+    const words = toks.length;
+    if (words === 0) return 0.0;
+    const unique = new Set(toks).size;
+    const upperRatio = (raw.replace(/[^A-Z]/g, "").length) / Math.max(len, 1);
+    const linkCount = (raw.match(/https?:\/\//g) || []).length;
+    const punctuationBursts = (raw.match(/[!?.]{3,}/g) || []).length;
+    const hasGreeting = /(hello|hi|hey|dear)\b/i.test(raw) ? 1 : 0;
+    const hasThanks = /(thanks|thank you|appreciate)\b/i.test(raw) ? 1 : 0;
+    const asksQuestion = /\?/.test(raw) ? 1 : 0;
+    const f_len = Math.max(0, 1 - Math.abs(words - 25) / 25);
+    const f_unique = unique / words;
+    const f_upper = -upperRatio;
+    const f_links = -Math.min(linkCount, 2) * 0.6;
+    const f_punct = -Math.min(punctuationBursts, 3) * 0.4;
+    const f_greet = hasGreeting ? 0.2 : 0.0;
+    const f_thanks = hasThanks ? 0.2 : 0.0;
+    const f_question = asksQuestion ? 0.2 : 0.0;
+    const z = 1.2 * f_len + 1.0 * f_unique + 0.8 * f_greet + 0.7 * f_thanks + 0.6 * f_question + 0.8 * f_upper + 1.0 * f_links + 0.8 * f_punct + 0.0;
+    return 1 / (1 + Math.exp(-z));
+  };
+  const [playingAudio, setPlayingAudio] = useState(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -206,13 +241,17 @@ export default function PublicProfile() {
         className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
         rows="4"
       />
+      <div className="text-xs text-purple-300 -mt-1 mb-2">Algorithm: Support Vector Machine (linear) — Message Quality: {quality.toFixed(2)} {quality < 0.3 ? <span className="text-red-400">(revise)</span> : quality < 0.6 ? <span className="text-yellow-400">(okay)</span> : <span className="text-green-400">(great)</span>}</div>
       <button
         onClick={handleSendMessage}
-        disabled={sendingMessage || !message.trim()}
+        disabled={sendingMessage || !message.trim() || quality < 0.3}
         className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-semibold transition-colors"
       >
         {sendingMessage ? 'Sending...' : 'Send Message'}
       </button>
+      {quality < 0.3 && (
+        <div className="mt-2 text-xs text-red-300">Message quality is low. Consider adding a friendly greeting, a clear ask, and fewer links/punctuation.</div>
+      )}
     </div>
   );
 
@@ -496,7 +535,14 @@ export default function PublicProfile() {
                           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center p-4 text-center">
                             <h3 className="text-lg font-bold mb-2 text-white">{item.title}</h3>
                             <div className="flex space-x-3">
-                              {item.mediaFiles?.find(m => m.type === 'audio') && <button onClick={() => alert(`Playing: ${item.title}`)} className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors">▶</button>}
+                              {item.mediaFiles?.find(m => m.type === 'audio') && (
+                                <button
+                                  onClick={() => setPlayingAudio(item._id)}
+                                  className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+                                >
+                                  ▶
+                                </button>
+                              )}
                               {item.link && <a href={item.link} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors">🔗</a>}
                             </div>
                           </div>
@@ -505,6 +551,34 @@ export default function PublicProfile() {
                     </div>
                   )}
                 </div>
+
+                {/* Audio Player Modal */}
+                {playingAudio && (
+                  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+                      {(() => {
+                        const item = portfolios.find(p => p._id === playingAudio);
+                        const audioFile = item?.mediaFiles?.find(m => m.type === 'audio');
+                        const src = audioFile?.url
+                          ? (audioFile.url.startsWith('http') ? audioFile.url : `${API_BASE}/uploads/${audioFile.url}`)
+                          : undefined;
+                        return src ? (
+                          <AudioPlayer
+                            src={src}
+                            title={item.title}
+                            onEnded={() => setPlayingAudio(null)}
+                          />
+                        ) : null;
+                      })()}
+                      <button
+                        onClick={() => setPlayingAudio(null)}
+                        className="mt-4 w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white transition-colors"
+                      >
+                        Close Player
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Message panel for connected users (opened by icon) */
                 /* Inline CTA if not connected */}

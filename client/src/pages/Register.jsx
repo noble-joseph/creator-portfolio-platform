@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaEye, FaEyeSlash, FaSpinner } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaSpinner, FaGoogle } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
-import apiClient from '../utils/api';
+import apiClient, { API_BASE } from '../utils/api';
+import { isEmail, usernameValid, passwordStrength, describePasswordErrors, nonEmpty } from '../utils/validation';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -30,23 +31,27 @@ const Register = () => {
     setError('');
   };
 
+  const fieldErrors = useMemo(() => {
+    const errs = {};
+    if (!nonEmpty(formData.name)) errs.name = 'Name is required';
+    if (!isEmail(formData.email)) errs.email = 'Invalid email';
+    if (!usernameValid(formData.username)) errs.username = '3-20 chars: letters, numbers, _ or .';
+    const ps = passwordStrength(formData.password);
+    if (!ps.strong) errs.password = `Weak password: ${describePasswordErrors(ps).join(', ')}`;
+    if (formData.password !== formData.confirmPassword) errs.confirmPassword = 'Passwords do not match';
+    if (!nonEmpty(formData.specialization)) errs.specialization = 'Specialization is required';
+    return errs;
+  }, [formData]);
+
+  const formValid = useMemo(() => Object.keys(fieldErrors).length === 0, [fieldErrors]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    // Validation
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      setLoading(false);
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      setLoading(false);
-      return;
-    }
+    // Client validation guard
+    if (!formValid) { setLoading(false); return; }
 
     try {
       const response = await apiClient.post('/api/auth/register', {
@@ -57,7 +62,7 @@ const Register = () => {
         role: formData.role,
         specialization: formData.specialization
       });
-      
+
       if (response.data.token) {
         localStorage.setItem('accessToken', response.data.token);
         localStorage.setItem('refreshToken', response.data.refreshToken);
@@ -70,7 +75,7 @@ const Register = () => {
       if (err.response?.data?.error) {
         setError(err.response.data.error);
       } else if (err.code === 'NETWORK_ERROR' || err.message.includes('Network Error')) {
-        setError('Network error. Please check if the server is running on http://localhost:5000');
+        setError(`Network error. Please check if the server is reachable: ${API_BASE}`);
       } else {
         setError('Registration failed. Please try again.');
       }
@@ -79,32 +84,36 @@ const Register = () => {
     }
   };
 
+  const handleGoogleRegister = () => {
+    window.location.href = `${API_BASE}/api/auth/google`;
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-premium-dark flex items-center justify-center px-4 py-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
         className="w-full max-w-md"
       >
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 shadow-2xl">
+        <div className="card shadow-large">
           {/* Header */}
           <div className="text-center mb-8">
             <motion.h1
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.6 }}
-              className="text-3xl font-bold text-white mb-2"
+              className="text-3xl font-bold text-white mb-2 font-display"
             >
-              Join the Platform
+              Create Account
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.6 }}
-              className="text-gray-300"
+              className="text-neutral-300"
             >
-              Create your creator account
+              Join our creator community
             </motion.p>
           </div>
 
@@ -113,9 +122,9 @@ const Register = () => {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-lg"
+              className="mb-6 p-4 bg-error-50 border border-error-200 rounded-xl"
             >
-              <p className="text-red-300 text-sm">{error}</p>
+              <p className="text-error-700 text-sm">{error}</p>
             </motion.div>
           )}
 
@@ -125,11 +134,11 @@ const Register = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.6 }}
             onSubmit={handleSubmit}
-            className="space-y-4"
+            className="space-y-6"
           >
             {/* Name Field */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="name" className="block text-sm font-medium text-neutral-300 mb-2">
                 Full Name
               </label>
               <input
@@ -139,14 +148,15 @@ const Register = () => {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                className="input"
                 placeholder="Enter your full name"
               />
+              {fieldErrors.name && <p className="mt-1 text-xs text-error-600">{fieldErrors.name}</p>}
             </div>
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-neutral-300 mb-2">
                 Email Address
               </label>
               <input
@@ -156,14 +166,15 @@ const Register = () => {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                className="input"
                 placeholder="Enter your email"
               />
+              {fieldErrors.email && <p className="mt-1 text-xs text-error-600">{fieldErrors.email}</p>}
             </div>
 
             {/* Username Field */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="username" className="block text-sm font-medium text-neutral-300 mb-2">
                 Username
               </label>
               <input
@@ -173,14 +184,15 @@ const Register = () => {
                 value={formData.username}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                className="input"
                 placeholder="Choose a username"
               />
+              {fieldErrors.username && <p className="mt-1 text-xs text-error-600">{fieldErrors.username}</p>}
             </div>
 
             {/* Role Selection */}
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="role" className="block text-sm font-medium text-neutral-300 mb-2">
                 Creator Type
               </label>
               <select
@@ -189,7 +201,7 @@ const Register = () => {
                 value={formData.role}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                className="input"
               >
                 <option value="musician">Musician</option>
                 <option value="photographer">Photographer</option>
@@ -198,7 +210,7 @@ const Register = () => {
 
             {/* Specialization Field */}
             <div>
-              <label htmlFor="specialization" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="specialization" className="block text-sm font-medium text-neutral-300 mb-2">
                 Specialization
               </label>
               <input
@@ -208,14 +220,15 @@ const Register = () => {
                 value={formData.specialization}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                className="input"
                 placeholder={formData.role === 'musician' ? 'e.g., Rock, Jazz, Electronic' : 'e.g., Portrait, Landscape, Fashion'}
               />
+              {fieldErrors.specialization && <p className="mt-1 text-xs text-error-600">{fieldErrors.specialization}</p>}
             </div>
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-neutral-300 mb-2">
                 Password
               </label>
               <div className="relative">
@@ -226,22 +239,23 @@ const Register = () => {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  className="input pr-12"
                   placeholder="Create a password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors"
                 >
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
               </div>
+              {fieldErrors.password && <p className="mt-1 text-xs text-error-600">{fieldErrors.password}</p>}
             </div>
 
             {/* Confirm Password Field */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-neutral-300 mb-2">
                 Confirm Password
               </label>
               <div className="relative">
@@ -252,48 +266,73 @@ const Register = () => {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  className="input pr-12"
                   placeholder="Confirm your password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors"
                 >
                   {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
               </div>
+              {fieldErrors.confirmPassword && <p className="mt-1 text-xs text-error-600">{fieldErrors.confirmPassword}</p>}
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading}
-              className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-semibold text-white transition-colors flex items-center justify-center space-x-2 mt-6"
+              disabled={loading || !formValid}
+              className="btn btn-primary btn-md w-full"
             >
               {loading ? (
                 <>
-                  <FaSpinner className="animate-spin" />
-                  <span>Creating Account...</span>
+                  <FaSpinner className="animate-spin mr-2" />
+                  Creating Account...
                 </>
               ) : (
-                <span>Create Account</span>
+                'Create Account'
               )}
             </button>
           </motion.form>
+
+          {/* Divider */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7, duration: 0.6 }}
+            className="my-6 flex items-center"
+          >
+            <div className="flex-1 border-t border-white/10"></div>
+            <span className="px-4 text-neutral-400 text-sm">or</span>
+            <div className="flex-1 border-t border-white/10"></div>
+          </motion.div>
+
+          {/* Google Registration */}
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 0.6 }}
+            onClick={handleGoogleRegister}
+            className="btn btn-outline btn-md w-full"
+          >
+            <FaGoogle className="text-error-500 mr-2" />
+            Continue with Google
+          </motion.button>
 
           {/* Links */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.8, duration: 0.6 }}
+            transition={{ delay: 0.9, duration: 0.6 }}
             className="mt-6 text-center"
           >
-            <div className="text-gray-400 text-sm">
+            <div className="text-neutral-400 text-sm">
               Already have an account?{' '}
               <Link
                 to="/login"
-                className="text-blue-400 hover:text-blue-300 transition-colors"
+                className="text-gold-500 hover:text-gold-400 transition-colors"
               >
                 Sign in
               </Link>

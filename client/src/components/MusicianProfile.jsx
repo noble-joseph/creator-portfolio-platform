@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaPlay, FaPause, FaVolumeUp, FaHeart, FaShare, FaDownload } from 'react-icons/fa';
 import AudioPlayer from './AudioPlayer';
+import { API_BASE } from '../config';
 
 const MusicianProfile = ({ user, isOwner = false }) => {
   const [currentTrack, setCurrentTrack] = useState(null);
@@ -136,7 +137,8 @@ const MusicianProfile = ({ user, isOwner = false }) => {
                   {/* Audio Player */}
                   {(() => {
                     if (!currentTrack) return null;
-                    const src = currentTrack.mediaFiles?.find(m => m.type === 'audio')?.url;
+                    const raw = currentTrack.mediaFiles?.find(m => m.type === 'audio')?.url;
+                    const src = raw ? (raw.startsWith('http') ? raw : `${API_BASE}/uploads/${raw}`) : undefined;
                     if (!src) return null;
                     return (
                       <AudioPlayer

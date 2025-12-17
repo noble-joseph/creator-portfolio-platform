@@ -20,6 +20,7 @@ const GigsBoard = lazy(() => import("./pages/GigsBoard"));
 const Collaborations = lazy(() => import("./pages/Collaborations"));
 const Messages = lazy(() => import("./pages/Messages"));
 const Analytics = lazy(() => import("./pages/Analytics"));
+const AIAssistedFeatures = lazy(() => import("./pages/AIAssistedFeatures"));
 
 export default function App() {
   return (
@@ -43,6 +44,7 @@ export default function App() {
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/ai" element={<AIAssistedFeatures />} />
           </Routes>
         </Suspense>
       </Router>
