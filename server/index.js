@@ -22,7 +22,9 @@ import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 import rateLimitMiddleware from "./middleware/rateLimitMiddleware.js";
 import { sanitizeHTML } from "./middleware/sanitizeMiddleware.js";
 import { logRequest } from "./utils/logger.js";
-connectDB();
+if (process.env.NODE_ENV !== 'test') {
+  connectDB();
+}
 
 const app = express();
 
@@ -170,26 +172,31 @@ app.use("/api/ai", aiRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
+// Export app for testing
+export default app;
 
-const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  const PORT = process.env.PORT || 5000;
 
-// Handle port already in use error
-server.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`Port ${PORT} is already in use. Trying alternative port...`);
-    const alternativePort = PORT + 1;
-    const newServer = app.listen(alternativePort, () => {
-      console.log(`Server running on alternative port ${alternativePort}`);
-    });
-    newServer.on('error', (newErr) => {
-      console.error('Failed to start server on alternative port:', newErr);
+  const server = app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+
+  // Handle port already in use error
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`Port ${PORT} is already in use. Trying alternative port...`);
+      const alternativePort = PORT + 1;
+      const newServer = app.listen(alternativePort, () => {
+        console.log(`Server running on alternative port ${alternativePort}`);
+      });
+      newServer.on('error', (newErr) => {
+        console.error('Failed to start server on alternative port:', newErr);
+        process.exit(1);
+      });
+    } else {
+      console.error('Server error:', err);
       process.exit(1);
-    });
-  } else {
-    console.error('Server error:', err);
-    process.exit(1);
-  }
-});
+    }
+  });
+}

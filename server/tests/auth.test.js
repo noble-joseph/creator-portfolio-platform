@@ -1,4 +1,5 @@
 import request from 'supertest';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import app from '../index.js';
 import User from '../models/User.js';
 import { generateToken } from '../utils/generateToken.js';
@@ -12,7 +13,8 @@ describe('Authentication Routes', () => {
         email: 'test@example.com',
         password: 'TestPassword123!',
         role: 'musician',
-        specialization: 'Guitar'
+        specialization: 'Guitar',
+        genre: 'Rock'
       };
 
       const response = await request(app)
@@ -33,7 +35,8 @@ describe('Authentication Routes', () => {
         email: 'invalid-email',
         password: 'TestPassword123!',
         role: 'musician',
-        specialization: 'Guitar'
+        specialization: 'Guitar',
+        genre: 'Rock'
       };
 
       const response = await request(app)
@@ -51,7 +54,8 @@ describe('Authentication Routes', () => {
         email: 'test@example.com',
         password: '123',
         role: 'musician',
-        specialization: 'Guitar'
+        specialization: 'Guitar',
+        genre: 'Rock'
       };
 
       const response = await request(app)
@@ -69,7 +73,8 @@ describe('Authentication Routes', () => {
         email: 'test@example.com',
         password: 'TestPassword123!',
         role: 'musician',
-        specialization: 'Guitar'
+        specialization: 'Guitar',
+        genre: 'Rock'
       };
 
       // Register first user
@@ -96,7 +101,8 @@ describe('Authentication Routes', () => {
         email: 'test@example.com',
         password: 'TestPassword123!',
         role: 'musician',
-        specialization: 'Guitar'
+        specialization: 'Guitar',
+        genre: 'Rock'
       };
 
       await request(app)
@@ -160,7 +166,8 @@ describe('Authentication Routes', () => {
         email: 'test@example.com',
         password: 'TestPassword123!',
         role: 'musician',
-        specialization: 'Guitar'
+        specialization: 'Guitar',
+        genre: 'Rock'
       };
 
       const response = await request(app)

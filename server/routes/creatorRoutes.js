@@ -4,8 +4,21 @@ import { catchAsync } from '../middleware/errorMiddleware.js';
 import { sanitizePortfolioInput } from '../middleware/sanitizeMiddleware.js';
 import Portfolio from '../models/Portfolio.js';
 import User from '../models/User.js';
+import { uploadPortfolio } from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
+
+// Helper to map multer files to portfolio media structure
+const mapFilesToMedia = (files) => {
+  if (!files) return [];
+  return files.map(file => ({
+    type: file.mimetype.split('/')[0], // 'image', 'video', 'audio'
+    url: file.path, // Cloudinary URL
+    filename: file.filename,
+    size: file.size,
+    // duration and other fields would need metadata extraction if required
+  }));
+};
 
 // @desc    Get user's portfolio
 // @route   GET /api/creator/portfolio
@@ -21,9 +34,9 @@ router.get('/portfolio', protect, catchAsync(async (req, res) => {
 // @route   GET /api/creator/portfolio/public/:userId
 // @access  Public
 router.get('/portfolio/public/:userId', catchAsync(async (req, res) => {
-  const portfolios = await Portfolio.find({ 
+  const portfolios = await Portfolio.find({
     user: req.params.userId,
-    isPublic: true 
+    isPublic: true
   }).sort({ createdAt: -1 });
 
   res.json(portfolios);
@@ -61,11 +74,21 @@ router.get('/portfolio/visible/:userId', optionalAuth, catchAsync(async (req, re
 // @desc    Create portfolio item
 // @route   POST /api/creator/portfolio
 // @access  Private
-router.post('/portfolio', protect, sanitizePortfolioInput, catchAsync(async (req, res) => {
+router.post('/portfolio', protect, uploadPortfolio, sanitizePortfolioInput, catchAsync(async (req, res) => {
   const portfolioData = {
     ...req.body,
     user: req.user._id
   };
+
+  // Handle uploaded files
+  if (req.files) {
+    if (req.files.thumbnail && req.files.thumbnail[0]) {
+      portfolioData.thumbnail = req.files.thumbnail[0].path;
+    }
+    if (req.files.mediaFiles) {
+      portfolioData.mediaFiles = mapFilesToMedia(req.files.mediaFiles);
+    }
+  }
 
   const portfolio = new Portfolio(portfolioData);
   await portfolio.save();
@@ -79,7 +102,7 @@ router.post('/portfolio', protect, sanitizePortfolioInput, catchAsync(async (req
 // @desc    Update portfolio item
 // @route   PUT /api/creator/portfolio/:id
 // @access  Private
-router.put('/portfolio/:id', protect, sanitizePortfolioInput, catchAsync(async (req, res) => {
+router.put('/portfolio/:id', protect, uploadPortfolio, sanitizePortfolioInput, catchAsync(async (req, res) => {
   const portfolio = await Portfolio.findById(req.params.id);
 
   if (!portfolio) {
@@ -91,8 +114,7 @@ router.put('/portfolio/:id', protect, sanitizePortfolioInput, catchAsync(async (
   }
 
   const allowedUpdates = [
-    'title', 'description', 'category', 'mediaFiles', 'thumbnail',
-    'link', 'tags', 'isPublic', 'featured'
+    'title', 'description', 'category', 'link', 'tags', 'isPublic', 'featured'
   ];
 
   allowedUpdates.forEach(field => {
@@ -100,6 +122,16 @@ router.put('/portfolio/:id', protect, sanitizePortfolioInput, catchAsync(async (
       portfolio[field] = req.body[field];
     }
   });
+
+  // Handle uploaded files in update
+  if (req.files) {
+    if (req.files.thumbnail && req.files.thumbnail[0]) {
+      portfolio.thumbnail = req.files.thumbnail[0].path;
+    }
+    if (req.files.mediaFiles && req.files.mediaFiles.length > 0) {
+      portfolio.mediaFiles = mapFilesToMedia(req.files.mediaFiles);
+    }
+  }
 
   await portfolio.save();
 

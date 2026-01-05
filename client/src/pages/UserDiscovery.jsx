@@ -111,16 +111,7 @@ export default function UserDiscovery() {
     }
   };
 
-  const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    setMode("search");
-    if (value.length >= 3) {
-      fetchUsers(value);
-    } else {
-      setUsers([]);
-    }
-  };
+
 
   const handleSendConnectionRequest = async (userId) => {
     try {
@@ -142,43 +133,78 @@ export default function UserDiscovery() {
     }
   };
 
+  useEffect(() => {
+    fetchKNNUsers();
+  }, []);
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    setMode("search");
+    if (value.length >= 3) {
+      fetchUsers(value);
+    } else if (value === "") {
+      fetchKNNUsers();
+    } else {
+      setUsers([]);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white">
+    <div className="min-h-screen bg-black text-white">
       <Navbar />
-      <div className="container mx-auto px-6 py-8 max-w-4xl">
-        <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent text-center">
-          Discover Users
-        </h1>
-        <input
-          type="text"
-          placeholder="Search users by name or username (min 3 chars)"
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 mb-6 text-white"
-        />
-        {searchTerm === "" && (
-          <div className="text-center mb-6">
-            <button
-              onClick={fetchKNNUsers}
-              className="px-6 py-3 bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors text-white font-semibold"
-            >
-              Discover Similar Users
-            </button>
-            <div className="mt-3 flex items-center justify-center gap-3 flex-wrap">
+      <div className="container mx-auto px-6 py-12 max-w-5xl">
+        <header className="mb-12 text-center">
+          <h1 className="text-5xl font-bold mb-4 tracking-tighter uppercase">
+            Discovery Hub
+          </h1>
+          <p className="text-gray-500 uppercase tracking-widest text-xs font-bold">Find your next creative collaborator</p>
+        </header>
+
+        <div className="relative mb-12">
+          <input
+            type="text"
+            placeholder="Search by name, role, or craft..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="w-full p-5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:border-[#008080] focus:ring-1 focus:ring-[#008080] transition-all outline-none text-lg"
+          />
+          <div className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-600">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+        </div>
+
+        {mode !== "search" && (
+          <div className="flex items-center space-x-4 mb-8">
+            <h2 className="text-xl font-bold uppercase tracking-tight text-[#008080]">Recommended For You</h2>
+            <div className="h-px flex-1 bg-white/10" />
+            <div className="flex space-x-2">
+              <button
+                onClick={fetchKNNUsers}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${mode === 'knn' ? 'bg-[#008080] text-white' : 'bg-white/5 text-gray-500 hover:text-white'}`}
+              >
+                Similar Craft
+              </button>
               <button
                 onClick={fetchNBSuggestions}
-                className="px-4 py-2 bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors text-white text-sm"
+                className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${mode === 'nb' ? 'bg-[#CC5500] text-white' : 'bg-white/5 text-gray-500 hover:text-white'}`}
               >
-                NB: Suggest Specializations
+                AI Suggestions
               </button>
               <button
                 onClick={fetchDTMatches}
-                className="px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors text-white text-sm"
+                className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${mode === 'tree' ? 'bg-indigo-600 text-white' : 'bg-white/5 text-gray-500 hover:text-white'}`}
               >
-                Decision Tree Matches
+                Matchmaker
               </button>
             </div>
           </div>
+        )}
+
+        {searchTerm !== "" && mode === "search" && (
+          <h2 className="text-xl font-bold uppercase tracking-tight text-gray-500 mb-8">Search Results</h2>
         )}
         {loading && <p>Loading...</p>}
         {!loading && users.length === 0 && searchTerm.length >= 3 && (
@@ -207,7 +233,7 @@ export default function UserDiscovery() {
                   <p className="text-purple-400 text-sm capitalize">{user.role}</p>
                   {(mode === "knn" || mode === "tree" || mode === "nb") && Array.isArray(user.reasons) && user.reasons.length > 0 && (
                     <ul className="mt-1 text-xs text-gray-400 list-disc list-inside space-y-0.5">
-                      {user.reasons.slice(0,3).map((reason, idx) => (
+                      {user.reasons.slice(0, 3).map((reason, idx) => (
                         <li key={idx}>{reason}</li>
                       ))}
                     </ul>

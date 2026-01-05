@@ -1,0 +1,27 @@
+
+> creator-portfolio-server@1.0.0 test
+> cross-env NODE_OPTIONS=--experimental-vm-modules jest --detectOpenHandles --forceExit
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+FAIL tests/auth.test.js
+  ● Test suite failed to run
+
+    ReferenceError: jest is not defined
+
+    [0m [90m 35 |[39m global[33m.[39mconsole [33m=[39m {
+     [90m 36 |[39m   [33m...[39mconsole[33m,[39m
+    [31m[1m>[22m[39m[90m 37 |[39m   log[33m:[39m jest[33m.[39mfn()[33m,[39m
+     [90m    |[39m        [31m[1m^[22m[39m
+     [90m 38 |[39m   debug[33m:[39m jest[33m.[39mfn()[33m,[39m
+     [90m 39 |[39m   info[33m:[39m jest[33m.[39mfn()[33m,[39m
+     [90m 40 |[39m   warn[33m:[39m jest[33m.[39mfn()[33m,[39m[0m
+
+      at jest (tests/setup.js:37:8)
+
+Test Suites: 1 failed, 1 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        1.856 s
+Ran all test suites.
+(node:11436) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)

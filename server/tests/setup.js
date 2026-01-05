@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import { jest, beforeAll, afterEach, afterAll } from '@jest/globals';
 
 let mongoServer;
 
@@ -7,7 +8,7 @@ let mongoServer;
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   const mongoUri = mongoServer.getUri();
-  
+
   await mongoose.connect(mongoUri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -17,7 +18,7 @@ beforeAll(async () => {
 // Clean up after each test
 afterEach(async () => {
   const collections = mongoose.connection.collections;
-  
+
   for (const key in collections) {
     const collection = collections[key];
     await collection.deleteMany({});

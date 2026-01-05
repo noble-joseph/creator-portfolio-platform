@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { FaCheckCircle } from "react-icons/fa";
 import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { API_BASE } from "../config";
@@ -24,12 +25,12 @@ export default function PublicProfile() {
     const id = setTimeout(() => setDebouncedMessage(message), 150);
     return () => clearTimeout(id);
   }, [message]);
-  const quality = useMemo(()=>svmMessageQuality(debouncedMessage), [debouncedMessage]);
+  const quality = useMemo(() => svmMessageQuality(debouncedMessage), [debouncedMessage]);
   const [error, setError] = useState(null);
   const [showMessagePanel, setShowMessagePanel] = useState(false);
   const [showConnectCTA, setShowConnectCTA] = useState(false);
   // --- SVM message quality helpers ---
-  const STOPWORDS = new Set(["the","a","an","and","or","but","if","in","on","at","to","for","of","with","is","it","this","that","as","by","from","be"]);
+  const STOPWORDS = new Set(["the", "a", "an", "and", "or", "but", "if", "in", "on", "at", "to", "for", "of", "with", "is", "it", "this", "that", "as", "by", "from", "be"]);
   const tokenize = (text) => (text || "").toLowerCase().slice(0, 500).replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(t => t && !STOPWORDS.has(t));
   const svmMessageQuality = (text) => {
     const raw = (text || "").slice(0, 500);
@@ -262,7 +263,7 @@ export default function PublicProfile() {
   if (error || !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white flex justify-center items-center">
-        <motion.div 
+        <motion.div
           className="text-center px-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -272,7 +273,7 @@ export default function PublicProfile() {
             {error || 'User Not Found'}
           </h2>
           <p className="text-gray-400 max-w-2xl mx-auto mb-8 text-lg">
-            {error === 'User not found' 
+            {error === 'User not found'
               ? "The creator you're looking for doesn't exist or has made their profile private."
               : "Something went wrong while loading this profile. Please try again later."
             }
@@ -365,7 +366,7 @@ export default function PublicProfile() {
           <Navbar />
           <div className="container mx-auto px-6 py-8">
             {/* Profile Header */}
-            <motion.div 
+            <motion.div
               className="relative text-center mb-12"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -381,7 +382,7 @@ export default function PublicProfile() {
                   />
                 </div>
               )}
-              
+
               {/* Profile Photo */}
               <div className="absolute left-1/2 transform -translate-x-1/2 top-32 z-10">
                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-purple-500 bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center shadow-2xl ring-4 ring-gray-800">
@@ -398,10 +399,13 @@ export default function PublicProfile() {
                   )}
                 </div>
               </div>
-              
+
               <div className="relative pt-48">
-                <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent flex items-center justify-center gap-3">
                   {user.name}
+                  {user.experienceLevel === 'professional' && (
+                    <FaCheckCircle className="text-yellow-500 w-8 h-8" title="Professional Verified" />
+                  )}
                 </h1>
                 <p className="text-gray-400 text-lg mb-2">@{user.username}</p>
                 <p className="text-purple-400 text-xl capitalize mb-2">{user.role}</p>
@@ -475,7 +479,7 @@ export default function PublicProfile() {
             </motion.div>
 
             {/* Main Content */}
-            <motion.main 
+            <motion.main
               className="grid grid-cols-1 lg:grid-cols-3 gap-8"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

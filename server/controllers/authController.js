@@ -11,7 +11,7 @@ const allowedRoles = ["musician", "photographer", "admin"];
 export const registerUser = async (req, res) => {
   try {
     console.log('req.body:', req.body);
-    const { name, username, email, password, role, specialization, specializationDetails, experiences, skills, bio, genre, style } = req.body;
+    const { name, username, email, password, role, specialization, specializationDetails, experiences, skills, bio, genre, style, experienceLevel } = req.body;
 
     if (!allowedRoles.includes(role)) {
       return res.status(400).json({ message: "Invalid role. Must be musician or photographer." });
@@ -29,7 +29,7 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ message: "Username already taken" });
     }
 
-    const user = await User.create({ name, username, email, password, role, specialization, specializationDetails, experiences, skills, bio, genre, style });
+    const user = await User.create({ name, username, email, password, role, specialization, specializationDetails, experiences, skills, bio, genre, style, experienceLevel });
 
     if (user) {
       res.status(201).json({
@@ -41,6 +41,9 @@ export const registerUser = async (req, res) => {
           role: user.role,
           specialization: user.specialization,
           specializationDetails: user.specializationDetails,
+          genre: user.genre,
+          style: user.style,
+          experienceLevel: user.experienceLevel,
         },
         accessToken: generateAccessToken(user._id),
         refreshToken: generateRefreshToken(user._id),
@@ -79,6 +82,9 @@ export const loginUser = async (req, res) => {
           role: user.role,
           specialization: user.specialization,
           specializationDetails: user.specializationDetails,
+          genre: user.genre,
+          style: user.style,
+          experienceLevel: user.experienceLevel,
         },
         token: generateAccessToken(user._id),
         refreshToken: generateRefreshToken(user._id),
@@ -127,12 +133,12 @@ export const refreshAccessToken = async (req, res) => {
 // @access  Private
 export const updateProfile = async (req, res) => {
   try {
-    const { specialization, specializationDetails, experiences, skills, bio, profilePhoto, coverPhoto, socialMedia } = req.body;
+    const { specialization, specializationDetails, experiences, skills, bio, profilePhoto, coverPhoto, socialMedia, genre, style, experienceLevel } = req.body;
     const userId = req.user.id;
 
     const user = await User.findByIdAndUpdate(
       userId,
-      { specialization, specializationDetails, experiences, skills, bio, profilePhoto, coverPhoto, socialMedia },
+      { specialization, specializationDetails, experiences, skills, bio, profilePhoto, coverPhoto, socialMedia, genre, style, experienceLevel },
       { new: true, runValidators: true }
     );
 
@@ -152,6 +158,9 @@ export const updateProfile = async (req, res) => {
           profilePhoto: user.profilePhoto,
           coverPhoto: user.coverPhoto,
           socialMedia: user.socialMedia,
+          genre: user.genre,
+          style: user.style,
+          experienceLevel: user.experienceLevel,
         },
       });
     } else {
@@ -222,6 +231,9 @@ export const getCurrentUser = async (req, res) => {
         profilePhoto: user.profilePhoto,
         coverPhoto: user.coverPhoto,
         socialMedia: user.socialMedia,
+        genre: user.genre,
+        style: user.style,
+        experienceLevel: user.experienceLevel,
       });
     } else {
       res.status(404).json({ message: "User not found" });

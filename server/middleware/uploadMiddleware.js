@@ -45,6 +45,22 @@ const fileFilter = (req, file, cb) => {
     return cb(new Error(`Invalid field name for upload: ${fieldName}`));
   }
 
+  // Role-based validation for mediaFiles and portfolio
+  if (req.user && (fieldName === 'mediaFiles' || fieldName === 'portfolio')) {
+    const userRole = req.user.role;
+    const fileMime = file.mimetype;
+
+    if (userRole === 'musician') {
+      if (!fileMime.startsWith('audio/') && !fileMime.startsWith('video/')) {
+        return cb(new Error("Musicians can only upload audio or video files."), false);
+      }
+    } else if (userRole === 'photographer') {
+      if (!fileMime.startsWith('image/')) {
+        return cb(new Error("Photographers/Cinematographers can only upload photos."), false);
+      }
+    }
+  }
+
   if (regex.test(path.extname(file.originalname).toLowerCase()) || regex.test(file.mimetype)) {
     return cb(null, true);
   } else {

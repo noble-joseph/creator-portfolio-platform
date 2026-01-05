@@ -9,6 +9,9 @@ const Profile = () => {
   const [experiences, setExperiences] = useState([{ title: "", company: "", duration: "", description: "" }]);
   const [skills, setSkills] = useState([]);
   const [bio, setBio] = useState("");
+  const [genre, setGenre] = useState("");
+  const [style, setStyle] = useState("");
+  const [experienceLevel, setExperienceLevel] = useState("Beginner");
   const [profilePhoto, setProfilePhoto] = useState("");
   const [coverPhoto, setCoverPhoto] = useState("");
   const [profilePhotoFile, setProfilePhotoFile] = useState(null);
@@ -32,7 +35,10 @@ const Profile = () => {
     "Wildlife Photography",
     "Sports Photography",
     "Architectural Photography",
-    "Food Photography"
+    "Food Photography",
+    "Cinematography",
+    "Videography",
+    "Documentary Filmmaking"
   ];
 
   const musicianSpecializations = [
@@ -68,6 +74,9 @@ const Profile = () => {
           setExperiences(userData.experiences || []);
           setSkills(userData.skills || []);
           setBio(userData.bio || "");
+          setGenre(userData.genre || "");
+          setStyle(userData.style || "");
+          setExperienceLevel(userData.experienceLevel || "Beginner");
           setProfilePhoto(userData.profilePhoto || "");
           setCoverPhoto(userData.coverPhoto || "");
           setSocialMedia(userData.socialMedia || {
@@ -194,7 +203,19 @@ const Profile = () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
       },
-      body: JSON.stringify({ specialization, specializationDetails, experiences, skills, bio, profilePhoto, coverPhoto, socialMedia }),
+      body: JSON.stringify({
+        specialization,
+        specializationDetails,
+        experiences,
+        skills,
+        bio,
+        profilePhoto,
+        coverPhoto,
+        socialMedia,
+        genre,
+        style,
+        experienceLevel
+      }),
     });
 
     if (response.ok) {
@@ -261,6 +282,44 @@ const Profile = () => {
                 ))}
               </select>
             </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div>
+              <label className="block text-neutral-300 mb-2 font-medium">Experience Level</label>
+              <select
+                value={experienceLevel}
+                onChange={(e) => setExperienceLevel(e.target.value)}
+                className={`w-full p-3 bg-white/5 text-white rounded-lg border border-white/10 focus:outline-none focus:ring-2 transition-all ${theme.border}`}
+                required
+              >
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="professional">Professional</option>
+              </select>
+            </div>
+            {userRole === 'musician' ? (
+              <div>
+                <label className="block text-neutral-300 mb-2 font-medium">Musical Genre</label>
+                <input
+                  type="text"
+                  value={genre}
+                  onChange={(e) => setGenre(e.target.value)}
+                  className={`w-full p-3 bg-white/5 text-white rounded-lg border border-white/10 focus:outline-none focus:ring-2 transition-all ${theme.border}`}
+                  placeholder="e.g. Jazz, Electronic, Classical"
+                />
+              </div>
+            ) : (
+              <div>
+                <label className="block text-neutral-300 mb-2 font-medium">Photography Style</label>
+                <input
+                  type="text"
+                  value={style}
+                  onChange={(e) => setStyle(e.target.value)}
+                  className={`w-full p-3 bg-white/5 text-white rounded-lg border border-white/10 focus:outline-none focus:ring-2 transition-all ${theme.border}`}
+                  placeholder="e.g. Noir, High-Key, Documentary"
+                />
+              </div>
+            )}
           </div>
           <div className="mt-6">
             <label className="block text-neutral-300 mb-2 font-medium">Specialization Details</label>

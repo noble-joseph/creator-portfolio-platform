@@ -1,20 +1,21 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useOutletContext } from "react-router-dom";
 import { API_BASE } from "../config";
-import Navbar from "../components/Navbar";
+
 import AudioPlayer from "../components/AudioPlayer";
 import { nonEmpty, isURL, maxLen, tagsValid } from "../utils/validation";
 
 // --- AI helpers (simple client-side demos) ---
-const STOPWORDS = new Set(["the","a","an","and","or","but","if","in","on","at","to","for","of","with","is","it","this","that","as","by","from","be"]);
+const STOPWORDS = new Set(["the", "a", "an", "and", "or", "but", "if", "in", "on", "at", "to", "for", "of", "with", "is", "it", "this", "that", "as", "by", "from", "be"]);
 const tokenize = (text) => (text || "").toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(t => t && !STOPWORDS.has(t));
 
 const naiveBayesCategory = (text) => {
   const keywords = {
-    music: ["song","track","album","guitar","beat","mix","vocal","music","audio"],
-    photography: ["photo","shoot","camera","lens","portrait","wedding","light"],
-    videography: ["video","film","clip","edit","cinema","footage"],
-    design: ["design","ui","ux","logo","brand","poster","figma"],
-    writing: ["write","poem","article","blog","story","script"],
+    music: ["song", "track", "album", "guitar", "beat", "mix", "vocal", "music", "audio"],
+    photography: ["photo", "shoot", "camera", "lens", "portrait", "wedding", "light"],
+    videography: ["video", "film", "clip", "edit", "cinema", "footage"],
+    design: ["design", "ui", "ux", "logo", "brand", "poster", "figma"],
+    writing: ["write", "poem", "article", "blog", "story", "script"],
     other: []
   };
   const toks = tokenize(text);
@@ -30,7 +31,7 @@ const naiveBayesCategory = (text) => {
       scores[cat] += Math.log(prob);
     }
   });
-  const sorted = Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
   const [bestCat, bestScore] = sorted[0];
   const secondScore = sorted[1] ? sorted[1][1] : -Infinity;
   if (bestScore - secondScore < Math.log(1.2)) return "other";
@@ -44,11 +45,11 @@ const privacyDecisionTree = ({ hasThumbnail, hasTags, hasMedia, hasLink }) => {
   return { recommendation: "private", reason: "Insufficient context" };
 };
 
-function buildTf(tokens){
+function buildTf(tokens) {
   const tf = new Map();
-  tokens.forEach(t=>tf.set(t,(tf.get(t)||0)+1));
-  const denom = Math.max(tokens.length,1);
-  for (const [k,v] of tf) tf.set(k, v/denom);
+  tokens.forEach(t => tf.set(t, (tf.get(t) || 0) + 1));
+  const denom = Math.max(tokens.length, 1);
+  for (const [k, v] of tf) tf.set(k, v / denom);
   return tf;
 }
 const knnSimilarTFIDF = (items, query, k = 3, idfMap) => {
@@ -60,21 +61,21 @@ const knnSimilarTFIDF = (items, query, k = 3, idfMap) => {
     const idf = idfMap.get(term) || 0;
     if (idf > 0) qVec.set(term, tf * idf);
   }
-  const dot = (a,b)=>{ let s=0; for (const [term,v] of a) s += v * (b.get(term)||0); return s; };
-  const norm = (a)=> Math.sqrt(Array.from(a.values()).reduce((s,v)=>s+v*v,0)) || 1;
+  const dot = (a, b) => { let s = 0; for (const [term, v] of a) s += v * (b.get(term) || 0); return s; };
+  const norm = (a) => Math.sqrt(Array.from(a.values()).reduce((s, v) => s + v * v, 0)) || 1;
   const qn = norm(qVec);
-  return items.map(it=>{
+  return items.map(it => {
     const v = it.__tfidfVec || new Map();
-    return { item: it, score: dot(qVec, v)/(qn*norm(v)) };
-  }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,k);
+    return { item: it, score: dot(qVec, v) / (qn * norm(v)) };
+  }).filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, k);
 };
 
 const nnPredict = (views = 0, likes = 0, comments = 0) => {
   // Simple normalized features to [0,1], then sigmoid
-  const f = [Math.min(views/1000,1), Math.min(likes/50,1), Math.min(comments/50,1)];
+  const f = [Math.min(views / 1000, 1), Math.min(likes / 50, 1), Math.min(comments / 50, 1)];
   const W = [0.5, 0.9, 0.4]; const b = 0.0;
-  const z = f.reduce((s,v,i)=>s+v*W[i], b);
-  return 1/(1+Math.exp(-z));
+  const z = f.reduce((s, v, i) => s + v * W[i], b);
+  return 1 / (1 + Math.exp(-z));
 };
 
 // Small hook for debouncing values (module scope)
@@ -88,6 +89,7 @@ function useDebounced(value, delay = 200) {
 }
 
 export default function Portfolio() {
+  const { user } = useOutletContext();
   const [portfolios, setPortfolios] = useState([]);
   const [form, setForm] = useState({
     title: "",
@@ -137,23 +139,23 @@ export default function Portfolio() {
     const list = [...portfolios];
     if (sortMode === "ai") {
       return list
-        .map(it => ({ it, score: nnPredict(it.views || 0, (it.likes||[]).length || 0, (it.comments||[]).length || 0) }))
-        .sort((a,b)=>b.score-a.score)
-        .map(x=>x.it);
+        .map(it => ({ it, score: nnPredict(it.views || 0, (it.likes || []).length || 0, (it.comments || []).length || 0) }))
+        .sort((a, b) => b.score - a.score)
+        .map(x => x.it);
     }
-    return list.sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt));
+    return list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   }, [portfolios, sortMode]);
 
   // Precompute TF-IDF for portfolios corpus and debounce query
   const { idfMap, enrichedPortfolios } = useMemo(() => {
-    const docs = portfolios.map(it => tokenize(`${it.title} ${it.description} ${(it.tags||[]).join(" ")}`));
+    const docs = portfolios.map(it => tokenize(`${it.title} ${it.description} ${(it.tags || []).join(" ")}`));
     const df = new Map();
-    docs.forEach(tokens => { const seen = new Set(tokens); for (const t of seen) df.set(t, (df.get(t)||0)+1); });
+    docs.forEach(tokens => { const seen = new Set(tokens); for (const t of seen) df.set(t, (df.get(t) || 0) + 1); });
     const N = Math.max(docs.length, 1);
-    const idf = new Map(); for (const [t,c] of df) idf.set(t, Math.log((N+1)/(c+1)) + 1);
+    const idf = new Map(); for (const [t, c] of df) idf.set(t, Math.log((N + 1) / (c + 1)) + 1);
     const enriched = portfolios.map((it, i) => {
       const tf = buildTf(docs[i]);
-      const vec = new Map(); for (const [term, tfv] of tf) vec.set(term, tfv * (idf.get(term)||0));
+      const vec = new Map(); for (const [term, tfv] of tf) vec.set(term, tfv * (idf.get(term) || 0));
       return { ...it, __tfidfVec: vec };
     });
     return { idfMap: idf, enrichedPortfolios: enriched };
@@ -190,7 +192,26 @@ export default function Portfolio() {
   };
 
   const handleMediaFilesChange = (e) => {
-    setMediaFiles(Array.from(e.target.files));
+    const files = Array.from(e.target.files);
+
+    // Role-based validation
+    if (user?.role === 'musician') {
+      const invalidFiles = files.filter(file => !file.type.startsWith('audio/') && !file.type.startsWith('video/'));
+      if (invalidFiles.length > 0) {
+        alert("Musicians can only upload audio or video files.");
+        e.target.value = ""; // Clear input
+        return;
+      }
+    } else if (user?.role === 'photographer') {
+      const invalidFiles = files.filter(file => !file.type.startsWith('image/'));
+      if (invalidFiles.length > 0) {
+        alert("Photographers/Cinematographers can only upload photos.");
+        e.target.value = ""; // Clear input
+        return;
+      }
+    }
+
+    setMediaFiles(files);
   };
 
   const handleSubmit = async (e) => {
@@ -283,8 +304,8 @@ export default function Portfolio() {
   if (loading) return <div className="text-white p-4">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white">
-      <Navbar />
+    <div className="min-h-screen text-white fade-in">
+
       <div className="container mx-auto px-6 py-8">
         <h1 className="text-3xl font-bold mb-6">My Portfolio</h1>
 
@@ -331,22 +352,35 @@ export default function Portfolio() {
             {submitAttempted && fieldErrors.link && <p className="mt-1 text-xs text-red-300">{fieldErrors.link}</p>}
           </div>
 
-          <div className="mb-4">
-            <label className="block mb-1">Category</label>
-            <select
-              name="category"
-              value={form.category}
-              onChange={handleChange}
-              className="w-full p-2 rounded bg-gray-700 text-white"
-              required
-            >
-              <option value="music">Music</option>
-              <option value="photography">Photography</option>
-              <option value="video">Video</option>
-              <option value="artwork">Artwork</option>
-              <option value="other">Other</option>
-            </select>
-            <div className="text-xs text-purple-300 mt-1">Algorithm: Bayesian Classifier (Naive Bayes) — Suggested: <b className="capitalize">{nbSuggestedCategory}</b></div>
+          <div className="mb-6 group">
+            <label className="block mb-2 text-xs font-bold uppercase tracking-widest text-gray-500 group-hover:text-[#008080] transition-colors">Category</label>
+            <div className="flex space-x-4">
+              <select
+                name="category"
+                value={form.category}
+                onChange={handleChange}
+                className="flex-1 p-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-[#008080] outline-none transition-all"
+                required
+              >
+                <option value="music">Music</option>
+                <option value="photography">Photography</option>
+                <option value="video">Video</option>
+                <option value="artwork">Artwork</option>
+                <option value="other">Other</option>
+              </select>
+              <button
+                type="button"
+                onClick={() => setForm(prev => ({ ...prev, category: nbSuggestedCategory }))}
+                className="px-6 py-3 bg-[#008080]/10 border border-[#008080]/30 text-[#008080] rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-[#008080] hover:text-white transition-all disabled:opacity-50"
+                disabled={form.category === nbSuggestedCategory}
+              >
+                Apply AI Prediction
+              </button>
+            </div>
+            <div className="mt-2 flex items-center space-x-2 text-[10px] font-bold uppercase tracking-[0.2em]">
+              <span className="text-gray-600">Bayesian Confidence:</span>
+              <span className="text-[#008080] animate-pulse">Suggested: {nbSuggestedCategory}</span>
+            </div>
             {submitAttempted && fieldErrors.category && <p className="mt-1 text-xs text-red-300">{fieldErrors.category}</p>}
           </div>
 
@@ -392,7 +426,7 @@ export default function Portfolio() {
             <label className="block mb-1">Media Files (optional)</label>
             <input
               type="file"
-              accept="image/*,video/*,audio/*"
+              accept={user?.role === 'musician' ? "audio/*,video/*" : user?.role === 'photographer' ? "image/*" : "image/*,video/*,audio/*"}
               multiple
               onChange={handleMediaFilesChange}
               className="w-full p-2 rounded bg-gray-700 text-white"
@@ -433,7 +467,7 @@ export default function Portfolio() {
           <h2 className="text-xl font-semibold">My Items</h2>
           <div className="flex items-center space-x-3">
             <label className="text-sm text-gray-300">Sort:</label>
-            <select value={sortMode} onChange={(e)=>setSortMode(e.target.value)} className="p-2 bg-gray-700 rounded text-white">
+            <select value={sortMode} onChange={(e) => setSortMode(e.target.value)} className="p-2 bg-gray-700 rounded text-white">
               <option value="newest">Newest</option>
               <option value="ai">AI score (Neural Network)</option>
             </select>

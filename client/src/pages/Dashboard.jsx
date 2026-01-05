@@ -1,271 +1,280 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useOutletContext, Link } from "react-router-dom";
+import { MdCheckCircle, MdPending, MdArrowForward, MdGridView, MdAudiotrack, MdPermMedia } from "react-icons/md";
 import { API_BASE } from "../config";
-import Navbar from "../components/Navbar";
-import Profile from "../components/Profile";
-import {
-  PortfolioStatsWidget,
-  RecentActivityWidget,
-  ConnectionRequestsWidget,
-  QuickActionsWidget
-} from "../components/DashboardWidget";
 
 export default function Dashboard() {
-  const navigate = useNavigate();
-  const [userData, setUserData] = useState(null);
-  const [portfolio, setPortfolio] = useState([]);
-  const [analytics, setAnalytics] = useState(null);
+  const { user } = useOutletContext();
+  const [stats, setStats] = useState({
+    totalProjects: 0,
+    mediaItems: 0,
+    published: 0,
+    drafts: 0
+  });
+  const [recentItems, setRecentItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchStats = async () => {
+      if (!user) return;
+
       try {
-        // Fetch user data including specialization and profile photo
-        const userResponse = await fetch(`${API_BASE}/api/auth/me`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
+        const res = await fetch(`${API_BASE}/api/creator/portfolio`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
         });
 
-        if (userResponse.status === 401) {
-          window.location.href = "/login";
-          return;
-        }
+        if (res.ok) {
+          const data = await res.json();
+          // Calculate stats
+          const total = data.length;
+          const pub = data.filter(i => i.isPublic !== false).length;
+          const drafts = total - pub;
+          const media = data.reduce((acc, curr) => acc + (curr.mediaFiles?.length || 0), 0);
 
-        if (userResponse.ok) {
-          const data = await userResponse.json();
-          setUserData(data);
-        }
+          setStats({
+            totalProjects: total,
+            mediaItems: media,
+            published: pub,
+            drafts: drafts
+          });
 
-        // Fetch portfolio data (latest 3 works)
-        const portfolioResponse = await fetch(`${API_BASE}/api/portfolio/latest?limit=3`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        });
+          // Recent items for preview
+          setRecentItems(data.slice(0, 3));
 
-        if (portfolioResponse.ok) {
-          const data = await portfolioResponse.json();
-          setPortfolio(data);
+          // Real actions from portfolio data
+          const actions = data.slice(0, 3).map(item => ({
+            id: item._id,
+            icon: item.category === 'music' ? "🎵" : "🎞️",
+            text: `Uploaded "${item.title}"`,
+            time: new Date(item.createdAt).toLocaleDateString()
+          }));
+
+          // Add profile update action if it's recent
+          if (user.updatedAt) {
+            actions.unshift({
+              id: 'profile-update',
+              icon: "✨",
+              text: "Updated profile bio",
+              time: new Date(user.updatedAt).toLocaleDateString()
+            });
+          }
+
+          setRecentItems(data.slice(0, 3));
+          // We'll use a local variable for actions in the render or add state
+          setActions(actions.slice(0, 3));
         }
       } catch (err) {
-        console.error("Failed to fetch data", err);
+        console.error("Failed to fetch dashboard stats", err);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchData();
-  }, []);
+    fetchStats();
+  }, [user]);
 
-  const getTheme = (role) => {
-    if (role === 'musician') {
+  const [actions, setActions] = useState([]);
+
+  // Calculate real profile completion
+  const calculateCompletion = () => {
+    if (!user) return 0;
+    let score = 0;
+    if (user.bio) score += 20;
+    if (user.profilePhoto) score += 20;
+    if (user.skills?.length > 0) score += 20;
+    if (user.experiences?.length > 0) score += 20;
+    if (user.specialization) score += 20;
+    return score;
+  };
+
+  const completion = calculateCompletion();
+
+  // Theme helpers
+  const getTheme = () => {
+    if (user?.role === 'musician') {
       return {
-        bg: 'bg-wood-gradient',
-        text: 'text-wood-50',
         accent: 'text-gold-500',
-        gradient: 'bg-gradient-to-r from-gold-500 to-gold-700',
-        cardHeader: 'border-gold-600/20'
+        bg: 'bg-wood-900/40',
+        border: 'border-gold-500/20',
+        gradient: 'bg-wood-gradient',
+        tip: "Adding tags to your tracks increases discovery by music supervisors by 40%."
       };
     }
     return {
-      bg: 'bg-cinematic-gradient',
-      text: 'text-cinematic-100',
       accent: 'text-cinemaAccent-400',
-      gradient: 'bg-gradient-to-r from-cinemaAccent-400 to-cinemaAccent-600',
-      cardHeader: 'border-cinemaAccent-500/20'
+      bg: 'bg-cinematic-900/40',
+      border: 'border-cinemaAccent-500/20',
+      gradient: 'bg-cinematic-gradient',
+      tip: "High-contrast thumbnails for your videos increase click-through rates by 25%."
     };
   };
 
-  const theme = userData ? getTheme(userData.role) : getTheme('musician'); // Default fallbacks
+  const theme = getTheme();
+
+  if (loading) return null;
 
   return (
-    <div className={`min-h-screen ${theme.bg}`}>
-      <Navbar />
-      <div className="container pt-24 pb-16">
-        {/* Header Section */}
-        {userData && (
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 font-display text-white">
-              Welcome back, <span className={`${theme.gradient} bg-clip-text text-transparent`}>{userData.name}</span>
-            </h1>
-            <p className={`${theme.text} max-w-2xl mx-auto text-lg capitalize`}>
-              {userData.role} • {userData.specialization}
-            </p>
-          </div>
-        )}
+    <div className="space-y-8 fade-in">
 
-        {/* Cover Photo Section */}
-        {userData && (
-          <div className="relative bg-black/40 backdrop-blur-md rounded-2xl overflow-hidden max-w-4xl mx-auto mb-20 shadow-medium border border-white/10">
-            {userData.coverPhoto ? (
-              <img
-                src={userData.coverPhoto}
-                alt="Cover Photo"
-                className="w-full h-48 object-cover"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.parentElement.querySelector('.fallback-cover').style.display = 'flex';
-                }}
-              />
-            ) : null}
-            <div
-              className={`fallback-cover w-full h-48 ${userData.role === 'musician' ? 'bg-wood-accent' : 'bg-cinematic-accent'} flex items-center justify-center ${userData.coverPhoto ? 'hidden' : 'flex'}`}
-            >
-              <h2 className="text-3xl font-semibold text-white">
-                {userData.specialization || "Your Specialization"}
+      {/* Section 1: Creator Snapshot */}
+      <section className={`p-8 rounded-2xl border border-white/10 relative overflow-hidden ${theme.bg}`}>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-white/5 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+
+        <div className="flex flex-col md:flex-row items-center justify-between relative z-10">
+          <div className="flex items-center space-x-6">
+            <div className="relative">
+              {/* Progress Circle */}
+              <svg className="w-20 h-20 transform -rotate-90">
+                <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-gray-700" />
+                <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="6" fill="transparent" strokeDasharray={226} strokeDashoffset={226 * (1 - completion / 100)} className={`${theme.accent}`} />
+              </svg>
+              <span className="absolute inset-0 flex items-center justify-center text-sm font-bold">{completion}%</span>
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-bold font-display">
+                Profile Completion
               </h2>
-            </div>
-            {userData.coverPhoto && (
-              <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
-                <h2 className="text-3xl font-semibold text-white">
-                  {userData.specialization || "Your Specialization"}
-                </h2>
+              <div className="flex items-center space-x-3 mt-1 text-neutral-400">
+                <span className="capitalize">{user?.role}</span>
+                <span>•</span>
+                <span className="capitalize">{user?.experienceLevel || 'Beginner'}</span>
               </div>
-            )}
+            </div>
+          </div>
 
-            {/* Profile Photo */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-0 z-10">
-              {userData.profilePhoto ? (
-                <img
-                  src={userData.profilePhoto}
-                  alt="Profile Photo"
-                  className="w-32 h-32 rounded-2xl border-4 border-white object-cover shadow-large"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'flex';
-                  }}
-                />
-              ) : null}
-              <div
-                className={`w-32 h-32 rounded-2xl border-4 border-black/50 ${userData.role === 'musician' ? 'bg-wood-accent' : 'bg-cinematic-accent'} flex items-center justify-center shadow-large ${userData.profilePhoto ? 'hidden' : 'flex'}`}
+          <div className="mt-6 md:mt-0 flex items-center space-x-4">
+            <div className="px-4 py-2 bg-black/40 rounded-lg border border-white/10 flex items-center space-x-2">
+              <span className="text-sm text-neutral-400">portfolio.com/</span>
+              <span className="text-sm font-medium text-white">{user?.username || 'user'}</span>
+              <button
+                onClick={() => navigator.clipboard.writeText(`${window.location.origin}/profile/${user?._id}`)}
+                className={`ml-2 text-xs uppercase font-bold ${theme.accent} hover:opacity-80`}
               >
-                <span className="text-3xl font-bold text-white">
-                  {userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}
-                </span>
-              </div>
+                Copy
+              </button>
             </div>
+            <Link to="/profile/edit" className="btn btn-secondary">
+              Edit Profile
+            </Link>
           </div>
-        )}
+        </div>
+      </section>
 
-        {/* Profile Information Section */}
-        {userData && (
-          <div className="max-w-4xl mx-auto mb-16">
-            <div className="card">
-              <div className="card-header">
-                <h2 className={`card-title ${theme.gradient} bg-clip-text text-transparent`}>Profile Information</h2>
-              </div>
-              <div className="card-content">
-                <Profile />
-              </div>
-            </div>
-          </div>
-        )}
+      {/* Section 2: Portfolio Summary Cards */}
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard title="Total Projects" value={stats.totalProjects} icon={<MdGridView />} theme={theme} />
+        <StatCard title="Media Items" value={stats.mediaItems} icon={<MdPermMedia />} theme={theme} />
+        <StatCard title="Published" value={stats.published} icon={<MdCheckCircle />} theme={theme} />
+        <StatCard title="Drafts" value={stats.drafts} icon={<MdPending />} theme={theme} />
+      </section>
 
-        {/* Portfolio Section */}
-        <div className="max-w-4xl mx-auto mb-16">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-bold text-white">Portfolio</h2>
-            <button
-              onClick={() => navigate("/portfolio")}
-              className="btn btn-primary"
-            >
-              View All
-            </button>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        {/* Section 3: Portfolio Preview */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold">Portfolio Preview</h3>
+            <span className="text-sm text-neutral-400">As seen by public</span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {portfolio.length > 0 ? (
-              portfolio.map((item) => (
-                <div key={item._id} className="card card-hover group border-white/10 bg-black/40">
-                  <div className="aspect-video overflow-hidden rounded-t-2xl">
-                    <img
-                      src={item.image || "/default-work.png"}
-                      alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                  <div className="p-6">
-                    <h3 className="text-lg font-semibold text-white mb-2">{item.title}</h3>
-                    <p className="text-neutral-400 text-sm line-clamp-2">{item.description}</p>
-                  </div>
+
+          <div className={`min-h-[300px] rounded-xl border border-white/5 bg-black/40 p-6 ${theme.border}`}>
+            {recentItems.length > 0 ? (
+              user?.role === 'musician' ? (
+                // Musician Preview (Playlist Style)
+                <div className="space-y-3">
+                  {recentItems.map((item, i) => (
+                    <div key={item._id} className="flex items-center p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group">
+                      <span className="w-8 text-neutral-500 font-mono text-sm">{i + 1}</span>
+                      <div className="w-10 h-10 rounded bg-neutral-800 flex items-center justify-center mr-4">
+                        {item.thumbnail ? <img src={item.thumbnail} className="w-full h-full object-cover rounded" /> : <MdAudiotrack />}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium text-white group-hover:text-gold-400 transition-colors">{item.title}</h4>
+                        <p className="text-xs text-neutral-500">{item.category}</p>
+                      </div>
+                      <span className="text-xs text-neutral-500">{item.mediaFiles?.[0]?.duration ? `${Math.floor(item.mediaFiles[0].duration / 60)}:${(item.mediaFiles[0].duration % 60).toString().padStart(2, '0')}` : '--:--'}</span>
+                    </div>
+                  ))}
                 </div>
-              ))
+              ) : (
+                // Photographer/Cinematographer Preview (Grid Style)
+                <div className="grid grid-cols-3 gap-4">
+                  {recentItems.map((item) => (
+                    <div key={item._id} className="aspect-square rounded-lg bg-neutral-800 overflow-hidden relative group">
+                      <img
+                        src={item.thumbnail || item.mediaFiles?.[0]?.url || 'https://via.placeholder.com/300'}
+                        alt={item.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-xs font-medium text-white px-2 py-1 bg-black/60 rounded backdrop-blur-sm">View</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )
             ) : (
-              <div className="col-span-3 text-center py-12">
-                <p className="text-neutral-400">No portfolio items to display.</p>
-                <button
-                  onClick={() => navigate("/portfolio")}
-                  className="btn btn-primary mt-4"
-                >
-                  Add Your First Work
-                </button>
+              <div className="h-full flex flex-col items-center justify-center text-neutral-500 py-12">
+                <p>No published items yet.</p>
+                <Link to="/portfolio" className={`mt-4 text-sm font-medium ${theme.accent}`}>Add your first project &rarr;</Link>
               </div>
             )}
           </div>
         </div>
 
-        {/* Dashboard Widgets Section */}
-        {userData && (
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl font-bold text-white mb-8">Dashboard Overview</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              <PortfolioStatsWidget userId={userData._id} />
-              <ConnectionRequestsWidget userId={userData._id} />
-              <RecentActivityWidget userId={userData._id} />
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <QuickActionsWidget navigate={navigate} />
-              {/* Analytics Card */}
-              <div className="card">
-                <div className="card-header">
-                  <h3 className={`card-title ${theme.gradient} bg-clip-text text-transparent`}>Analytics</h3>
-                  <p className="card-description text-neutral-400">Track your portfolio performance and engagement</p>
-                </div>
-                <div className="card-content">
-                  {analytics ? (
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center p-3 bg-white/5 border border-white/10 rounded-lg">
-                        <span className="text-neutral-300 font-medium">Profile Views:</span>
-                        <span className="text-white font-semibold">{analytics.profileViews}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 bg-white/5 border border-white/10 rounded-lg">
-                        <span className="text-neutral-300 font-medium">Connections:</span>
-                        <span className="text-white font-semibold">{analytics.connectionsCount}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 bg-white/5 border border-white/10 rounded-lg">
-                        <span className="text-neutral-300 font-medium">Followers:</span>
-                        <span className="text-white font-semibold">{analytics.followersCount}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 bg-white/5 border border-white/10 rounded-lg">
-                        <span className="text-neutral-300 font-medium">Following:</span>
-                        <span className="text-white font-semibold">{analytics.followingCount}</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={async () => {
-                        try {
-                          const response = await fetch(`${API_BASE}/api/auth/analytics`, {
-                            headers: {
-                              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-                            },
-                          });
-                          if (response.ok) {
-                            const data = await response.json();
-                            setAnalytics(data);
-                          }
-                        } catch (error) {
-                          console.error("Failed to fetch analytics", error);
-                        }
-                      }}
-                      className="btn btn-secondary w-full"
-                    >
-                      Load Analytics
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
+        {/* Section 4: Recent Actions */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold">Recent Actions</h3>
           </div>
-        )}
+
+          <div className="space-y-4">
+            {actions.length > 0 ? actions.map(action => (
+              <ActionItem
+                key={action.id}
+                icon={action.icon}
+                text={action.text}
+                time={action.time}
+              />
+            )) : (
+              <p className="text-sm text-neutral-500">No recent actions recorded.</p>
+            )}
+          </div>
+
+          <div className={`p-6 rounded-xl bg-gradient-to-br from-gray-900 to-black border border-white/10 mt-8`}>
+            <h4 className="font-bold text-white mb-2">Pro Tip</h4>
+            <p className="text-sm text-neutral-400 leading-relaxed">
+              {theme.tip}
+            </p>
+          </div>
+        </div>
       </div>
+    </div>
+  );
+}
+
+function StatCard({ title, value, icon, theme }) {
+  return (
+    <div className="bg-black/40 border border-white/10 p-6 rounded-xl hover:bg-white/5 transition-colors group">
+      <div className="flex items-start justify-between mb-4">
+        <span className="text-neutral-400 font-medium text-sm">{title}</span>
+        <span className={`text-xl text-neutral-600 group-hover:${theme.accent} transition-colors`}>{icon}</span>
+      </div>
+      <div className="text-3xl font-bold font-display">{value}</div>
+    </div>
+  );
+}
+
+function ActionItem({ icon, text, time }) {
+  return (
+    <div className="flex items-center p-4 rounded-lg border border-white/5 bg-white/5 hover:border-white/10 transition-colors">
+      <span className="text-xl mr-4">{icon}</span>
+      <div className="flex-1">
+        <p className="text-sm font-medium text-white">{text}</p>
+        <p className="text-xs text-neutral-500">{time}</p>
+      </div>
+      <MdArrowForward className="text-neutral-600" />
     </div>
   );
 }

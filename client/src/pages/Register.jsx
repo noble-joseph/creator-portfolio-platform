@@ -14,6 +14,9 @@ const Register = () => {
     password: '',
     confirmPassword: '',
     role: 'musician',
+    genre: '',
+    style: '',
+    experienceLevel: 'beginner',
     specialization: ''
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -39,6 +42,10 @@ const Register = () => {
     const ps = passwordStrength(formData.password);
     if (!ps.strong) errs.password = `Weak password: ${describePasswordErrors(ps).join(', ')}`;
     if (formData.password !== formData.confirmPassword) errs.confirmPassword = 'Passwords do not match';
+
+    if (formData.role === 'musician' && !nonEmpty(formData.genre)) errs.genre = 'Genre is required';
+    if (formData.role === 'photographer' && !nonEmpty(formData.style)) errs.style = 'Style is required';
+    if (!nonEmpty(formData.experienceLevel)) errs.experienceLevel = 'Experience level is required';
     if (!nonEmpty(formData.specialization)) errs.specialization = 'Specialization is required';
     return errs;
   }, [formData]);
@@ -60,6 +67,9 @@ const Register = () => {
         username: formData.username,
         password: formData.password,
         role: formData.role,
+        genre: formData.role === 'musician' ? formData.genre : undefined,
+        style: formData.role === 'photographer' ? formData.style : undefined,
+        experienceLevel: formData.experienceLevel,
         specialization: formData.specialization
       });
 
@@ -206,6 +216,78 @@ const Register = () => {
                 <option value="musician">Musician</option>
                 <option value="photographer">Photographer</option>
               </select>
+            </div>
+
+            {/* Genre Selection (Musician only) */}
+            {formData.role === 'musician' && (
+              <div>
+                <label htmlFor="genre" className="block text-sm font-medium text-neutral-300 mb-2">
+                  Primary Genre
+                </label>
+                <select
+                  id="genre"
+                  name="genre"
+                  value={formData.genre}
+                  onChange={handleChange}
+                  required
+                  className="input"
+                >
+                  <option value="">Select Genre</option>
+                  <option value="Classical">Classical</option>
+                  <option value="Contemporary">Contemporary</option>
+                  <option value="Jazz">Jazz</option>
+                  <option value="Rock">Rock</option>
+                  <option value="Electronic">Electronic</option>
+                  <option value="Other">Other</option>
+                </select>
+                {fieldErrors.genre && <p className="mt-1 text-xs text-error-600">{fieldErrors.genre}</p>}
+              </div>
+            )}
+
+            {/* Style Selection (Photographer only) */}
+            {formData.role === 'photographer' && (
+              <div>
+                <label htmlFor="style" className="block text-sm font-medium text-neutral-300 mb-2">
+                  Photography Style
+                </label>
+                <select
+                  id="style"
+                  name="style"
+                  value={formData.style}
+                  onChange={handleChange}
+                  required
+                  className="input"
+                >
+                  <option value="">Select Style</option>
+                  <option value="Fashion">Fashion</option>
+                  <option value="Street">Street</option>
+                  <option value="Portrait">Portrait</option>
+                  <option value="Landscape">Landscape</option>
+                  <option value="Cinematic">Cinematic</option>
+                  <option value="Other">Other</option>
+                </select>
+                {fieldErrors.style && <p className="mt-1 text-xs text-error-600">{fieldErrors.style}</p>}
+              </div>
+            )}
+
+            {/* Experience Level */}
+            <div>
+              <label htmlFor="experienceLevel" className="block text-sm font-medium text-neutral-300 mb-2">
+                Experience Level
+              </label>
+              <select
+                id="experienceLevel"
+                name="experienceLevel"
+                value={formData.experienceLevel}
+                onChange={handleChange}
+                required
+                className="input"
+              >
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="professional">Professional</option>
+              </select>
+              {fieldErrors.experienceLevel && <p className="mt-1 text-xs text-error-600">{fieldErrors.experienceLevel}</p>}
             </div>
 
             {/* Specialization Field */}
